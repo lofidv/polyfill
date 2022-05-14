@@ -5,21 +5,21 @@ import (
 	"testing"
 )
 
-func TestStore(t *testing.T) {
-	t.Run("testArray", testArray)
-	t.Run("testStruct", testStructs)
+func TestFilter(t *testing.T) {
+	t.Run("testArray", testArrayFilter)
+	t.Run("testStruct", testStructsFilter)
 }
 
-type testCase[V Constraint] struct {
+type testCaseFilter[V, T comparable] struct {
 	name     string
 	seed     []V
-	expected []V
+	expected Slice[V, T]
 	fn       func(V) bool
 }
 
-func testArray(t *testing.T) {
+func testArrayFilter(t *testing.T) {
 	t.Parallel()
-	testsIns := []testCase[int]{
+	testsIns := []testCaseFilter[int, int]{
 		{
 			name:     "i == 1",
 			seed:     []int{1, 2, 3, 4},
@@ -35,10 +35,10 @@ func testArray(t *testing.T) {
 	}
 
 	for _, tc := range testsIns {
-		t.Run(tc.name, runTestCase(tc))
+		t.Run(tc.name, runTestCaseFilter(tc))
 	}
 
-	testsStrings := []testCase[string]{
+	testsStrings := []testCaseFilter[string, int]{
 		{
 			name:     "i != a",
 			seed:     []string{"a", "b", "c", "d"},
@@ -48,23 +48,12 @@ func testArray(t *testing.T) {
 	}
 
 	for _, tc := range testsStrings {
-		t.Run(tc.name, runTestCase(tc))
+		t.Run(tc.name, runTestCaseFilter(tc))
 	}
 
 }
 
-type person struct {
-	Name string
-	Age  int
-}
-
-type persons []person
-
-func (p person) isAdult() bool {
-	return p.Age >= 18
-}
-
-func testStructs(t *testing.T) {
+func testStructsFilter(t *testing.T) {
 	t.Parallel()
 	var personsList persons
 	personsList = append(personsList, person{Name: "person 10", Age: 10})
@@ -72,18 +61,12 @@ func testStructs(t *testing.T) {
 	personsList = append(personsList, person{Name: "person 18", Age: 18})
 	personsList = append(personsList, person{Name: "person 20", Age: 20})
 
-	var personListExpected = persons{
-		person{
-			Name: "person 18",
-			Age:  18,
-		},
-		person{
-			Name: "person 20",
-			Age:  20,
-		},
+	var personListExpected = Slice[person, person]{
+		person{Name: "person 18", Age: 18},
+		person{Name: "person 20", Age: 20},
 	}
 
-	testPersons := []testCase[person]{
+	testPersons := []testCaseFilter[person, person]{
 		{
 			name:     "p.age >= 18",
 			seed:     personsList,
@@ -93,15 +76,13 @@ func testStructs(t *testing.T) {
 	}
 
 	for _, tc := range testPersons {
-		t.Run(tc.name, runTestCase(tc))
+		t.Run(tc.name, runTestCaseFilter(tc))
 	}
 }
 
-func runTestCase[V Constraint](tc testCase[V]) func(t *testing.T) {
+func runTestCaseFilter[V, T comparable](tc testCaseFilter[V, T]) func(t *testing.T) {
 	return func(t *testing.T) {
-		var s Slice[V]
-		res := s.Add(tc.seed...).Filter(tc.fn)
-
+		res := NewSlice[V, T](tc.seed...).Filter(tc.fn)
 		assert.Equal(t, res, tc.expected)
 	}
 }
