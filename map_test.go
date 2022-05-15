@@ -11,7 +11,7 @@ func TestMap(t *testing.T) {
 	t.Run("testStruct", testStructsMap)
 }
 
-type testCaseMap[V, T comparable] struct {
+type testCaseMap[V, T any] struct {
 	name     string
 	seed     []V
 	expected Slice[T, V]
@@ -69,7 +69,7 @@ func testStructsMap(t *testing.T) {
 	}
 }
 
-func runTestCaseMap[T, V comparable](tc testCaseMap[V, T]) func(t *testing.T) {
+func runTestCaseMap[T, V any](tc testCaseMap[V, T]) func(t *testing.T) {
 	return func(t *testing.T) {
 		res := NewSlice[V, T](tc.seed...).Map(tc.fn)
 		assert.Equal(t, res, tc.expected)

@@ -17,3 +17,11 @@ type adolescent struct {
 }
 
 type adolescents []adolescent
+
+type pet struct {
+	Name string
+	Age  int
+	Type string
+}
+
+type pets []pet

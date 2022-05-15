@@ -21,16 +21,24 @@ func (p persons) len() int {
 	return len(p)
 }
 
-type Adolescent struct {
+type adolescent struct {
 	Name string
 	Age  int
 }
 
-type Adolescents []Adolescent
+type adolescents []adolescent
 
-func (p Adolescents) len() int {
+func (p adolescents) len() int {
 	return len(p)
 }
+
+type pet struct {
+	Name string
+	Age  int
+	Type string
+}
+
+type pets []pet
 
 func main() {
 	var personsList persons
@@ -39,23 +47,51 @@ func main() {
 	personsList = append(personsList, person{Name: "person 18", Age: 18})
 	personsList = append(personsList, person{Name: "person 20", Age: 20})
 
-	s := polyfill.NewSlice[person, Adolescent](personsList...)
+	s := polyfill.NewSlice[person, adolescent](personsList...)
 	res := s.Filter(func(p person) bool {
 		return !p.isAdult()
-	}).Map(func(p person) Adolescent {
-		return Adolescent{Name: p.Name, Age: p.Age}
+	}).Map(func(p person) adolescent {
+		return adolescent{Name: p.Name, Age: p.Age}
 	})
 
-	fmt.Println(res)
-	var p = Adolescents(res)
-	fmt.Println(p.len())
+	fmt.Println(res) //[{person 10 10} {person 15 15}]
+
+	var p = adolescents(res)
+	fmt.Println(p.len()) // 2
 
 	str := polyfill.NewSlice[string, int]([]string{"1", "2", "3", "4", "5"}...)
-
 	resStr := str.Map(func(s string) int {
 		v, _ := strconv.Atoi(s)
 		return v
 	})
 
 	fmt.Println(resStr) //[1 2 3 4 5]
+
+	resReduce := polyfill.NewSlice[int, int]([]int{1, 2}...).Reduce(func(acc, el int) int {
+		return acc + el
+	}, 0)
+
+	fmt.Println(resReduce) //3
+
+	var petList pets
+	petList = append(petList, pet{Name: "Purin", Age: 12, Type: "dog"})
+	petList = append(petList, pet{Name: "Cinnamoroll", Age: 1, Type: "dog"})
+	petList = append(petList, pet{Name: "Melody", Age: 1, Type: "rabbit"})
+	petList = append(petList, pet{Name: "Kitty", Age: 1, Type: "cat"})
+
+	type petMap map[string]pet
+
+	indexed := polyfill.NewSlice[pet, petMap](petList...).Reduce(func(acc petMap, el pet) petMap {
+		acc[el.Name] = el
+		return acc
+	}, petMap{})
+
+	fmt.Println(indexed) ////map[Cinnamoroll:{Cinnamoroll 1 dog} Kitty:{Kitty 1 cat} Melody:{Melody 1 rabbit} Purin:{Purin 12 dog}]
+
+	arr := []int{45, 73, 12, 98, 7, 30, 12, 85}
+	index := polyfill.NewSlice[int, int](arr...).IndexOf(func(a, index int) bool {
+		return a == index
+	}, 12, 3)
+	fmt.Println(index) //6
+
 }

@@ -10,7 +10,7 @@ func TestFilter(t *testing.T) {
 	t.Run("testStruct", testStructsFilter)
 }
 
-type testCaseFilter[V, T comparable] struct {
+type testCaseFilter[V, T any] struct {
 	name     string
 	seed     []V
 	expected Slice[V, T]
@@ -80,7 +80,7 @@ func testStructsFilter(t *testing.T) {
 	}
 }
 
-func runTestCaseFilter[V, T comparable](tc testCaseFilter[V, T]) func(t *testing.T) {
+func runTestCaseFilter[V, T any](tc testCaseFilter[V, T]) func(t *testing.T) {
 	return func(t *testing.T) {
 		res := NewSlice[V, T](tc.seed...).Filter(tc.fn)
 		assert.Equal(t, res, tc.expected)
