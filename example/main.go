@@ -93,5 +93,4 @@ func main() {
 		return a == index
 	}, 12, 3)
 	fmt.Println(index) //6
-
 }
