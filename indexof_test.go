@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestIndex(t *testing.T) {
+func TestIndexIndexOf(t *testing.T) {
 	t.Run("testArray", testArrayIndexOf)
 	t.Run("testStruct", testStructsIndexOf)
 }

@@ -105,4 +105,28 @@ func main() {
 	}, "Cinnamoroll", 0)
 
 	fmt.Println(indexPet)
+
+	sliceSomeTest := []int{1, 2, 3, 4, 5, 6}
+	resultSome := polyfill.NewSlice[int, int](sliceSomeTest...).Some(func(i int) bool {
+		return i%2 == 0
+	})
+
+	fmt.Println(resultSome)
+
+	var sliceSomeTestPet pets
+	sliceSomeTestPet = append(sliceSomeTestPet, pet{Name: "Purin", Age: 12, Type: "dog"})
+	sliceSomeTestPet = append(sliceSomeTestPet, pet{Name: "Cinnamoroll", Age: 1, Type: "dog"})
+	sliceSomeTestPet = append(sliceSomeTestPet, pet{Name: "Melody", Age: 1, Type: "rabbit"})
+	sliceSomeTestPet = append(sliceSomeTestPet, pet{Name: "Kitty", Age: 1, Type: "cat"})
+
+	resultSomePet := polyfill.NewSlice[pet, pet](sliceSomeTestPet...).Some(func(p pet) bool {
+		return p.Age == 12
+	})
+
+	fmt.Println(resultSomePet)
+
+	resultFind := polyfill.NewSlice[pet, pet](sliceSomeTestPet...).Find(func(p pet) bool {
+		return p.Age == 2
+	})
+	fmt.Println(resultFind)
 }
