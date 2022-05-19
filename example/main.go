@@ -93,4 +93,16 @@ func main() {
 		return a == index
 	}, 12, 3)
 	fmt.Println(index) //6
+
+	var petListTwo pets
+	petListTwo = append(petListTwo, pet{Name: "Purin", Age: 12, Type: "dog"})
+	petListTwo = append(petListTwo, pet{Name: "Cinnamoroll", Age: 1, Type: "dog"})
+	petListTwo = append(petListTwo, pet{Name: "Melody", Age: 1, Type: "rabbit"})
+	petListTwo = append(petListTwo, pet{Name: "Kitty", Age: 1, Type: "cat"})
+
+	indexPet := polyfill.NewSlice[pet, string](petListTwo...).IndexOf(func(a pet, criteria string) bool {
+		return a.Name == criteria
+	}, "Cinnamoroll", 0)
+
+	fmt.Println(indexPet)
 }
