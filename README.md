@@ -6,7 +6,7 @@
 
 This project started as an experiment with the implementation of new generics. It may look like simple js functions but it is fully integrated and functional with arrays and structures.
 
-As expected, benchmarks demonstrate that generics will be much faster than implementations based on the "reflect" package. Benchmarks also show similar performance gains compared to pure `for` loops.
+As expected, generics will be much faster than implementations based on the "reflect" package. Benchmarks also show similar performance gains compared to pure `for` loops.
 
 I feel this library is legitimate and offers many more valuable abstractions.
 
