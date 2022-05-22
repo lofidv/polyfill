@@ -47,6 +47,12 @@ func main() {
 	personsList = append(personsList, person{Name: "person 18", Age: 18})
 	personsList = append(personsList, person{Name: "person 20", Age: 20})
 
+        onlyAdults := polyfill.NewSlice[person, person](personsList...).Filter(func(p person) bool {
+                return !p.isAdult()
+        })
+
+        fmt.Println(onlyAdults)
+
 	s := polyfill.NewSlice[person, adolescent](personsList...)
 	res := s.Filter(func(p person) bool {
 		return !p.isAdult()
@@ -126,7 +132,7 @@ func main() {
 	fmt.Println(resultSomePet)
 
 	resultFind := polyfill.NewSlice[pet, pet](sliceSomeTestPet...).Find(func(p pet) bool {
-		return p.Age == 2
+		return p.Age == 12
 	})
 	fmt.Println(resultFind)
 }
