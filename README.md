@@ -1,4 +1,4 @@
-# polyfill
+# Polyfill
 
 [![Go report](https://goreportcard.com/badge/github.com/lofidv/polyfill)](https://goreportcard.com/report/github.com/lofidv/polyfill)
 
@@ -241,7 +241,7 @@ fmt.Println(resultFind)//{ 0 }
 ## 🤝 Contributing
 
 - Fork the [project](https://github.com/lofidv/polyfill)
-- Fix [open issues](https://github.com/lofidv/polyfill) or request new features
+- Fix [open issues](https://github.com/lofidv/polyfill/issues) or request new features
 
 Don't hesitate ;)
 
