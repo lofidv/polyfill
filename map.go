@@ -3,8 +3,8 @@ package polyfill
 import "sync"
 
 // Map transforms each element using the provided function
-func (s *Slice[T]) Map(f func(T) any) *Slice[any] {
-	result := make([]any, len(s.elements))
+func Map[T any, R any](s *Slice[T], f func(T) R) *Slice[R] {
+	result := make([]R, len(s.elements))
 	for i, v := range s.elements {
 		result[i] = f(v)
 	}
@@ -12,8 +12,8 @@ func (s *Slice[T]) Map(f func(T) any) *Slice[any] {
 }
 
 // ParallelMap transforms elements concurrently (use with caution for CPU-bound operations)
-func (s *Slice[T]) ParallelMap(f func(T) any) *Slice[any] {
-	result := make([]any, len(s.elements))
+func ParallelMap[T any, R any](s *Slice[T], f func(T) R) *Slice[R] {
+	result := make([]R, len(s.elements))
 	var wg sync.WaitGroup
 	wg.Add(len(s.elements))
 

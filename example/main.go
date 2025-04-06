@@ -30,27 +30,26 @@ func main() {
 		{"David", 16},
 	}
 
+	wrappedPeople := polyfill.Wrap(people)
+	adults := wrappedPeople.Filter(func(p Person) bool {
+		return p.IsAdult()
+	})
+
 	// Filter adults and map to names
-	adultNames := polyfill.Wrap(people).
-		Filter(func(p Person) bool { return p.IsAdult() }).
-		Map(func(person Person) any {
-			return person.Name
-		}).
-		Unwrap()
+	adultNames := polyfill.Map(adults, func(p Person) string {
+		return p.Name
+	}).Unwrap()
 
 	fmt.Println("Adult names:", adultNames) // ["Alice", "Charlie"]
 
 	// 2. Parallel Map demonstration
-	numbers := []int{1, 2, 3, 4, 5}
-	squared := polyfill.Wrap(numbers).
-		ParallelMap(func(n int) any { return n * n }).
-		Unwrap()
+	numbers := polyfill.Wrap([]int{1, 2, 3, 4, 5})
+	squared := polyfill.ParallelMap(numbers, func(n int) any { return n * n }).Unwrap()
 
 	fmt.Println("Squared numbers:", squared) // [1, 4, 9, 16, 25]
 
 	// 3. Reduce example
-	sum := polyfill.Wrap(numbers).
-		Reduce(0, func(acc any, n int) any { return acc.(int) + n })
+	sum := numbers.Reduce(0, func(acc any, n int) any { return acc.(int) + n })
 
 	fmt.Println("Sum of numbers:", sum) // 15
 
@@ -75,7 +74,7 @@ func main() {
 	fmt.Printf("Has adults: %v, All adults: %v\n", hasAdults, allAdults) // true, false
 
 	// 6. Chunk and Reverse
-	chunks := polyfill.Wrap(numbers).Chunk(2)
+	chunks := numbers.Chunk(2)
 	fmt.Println("Chunks:")
 	for _, chunk := range chunks {
 		fmt.Println(chunk.Unwrap())
@@ -84,7 +83,7 @@ func main() {
 	// [3 4]
 	// [5]
 
-	reversed := polyfill.Wrap(numbers).Reverse().Unwrap()
+	reversed := numbers.Reverse().Unwrap()
 	fmt.Println("Reversed numbers:", reversed) // [5, 4, 3, 2, 1]
 
 	// 7. Sort
@@ -104,12 +103,11 @@ func main() {
 	fmt.Println("Unique numbers:", unique) // [1, 2, 3, 4, 5]
 
 	// 9. String conversion
-	strNumbers := []string{"1", "2", "3", "4"}
-	intNumbers := polyfill.Wrap(strNumbers).
-		Map(func(s string) any {
-			n, _ := strconv.Atoi(s)
-			return n
-		}).
+	strNumbers := polyfill.Wrap([]string{"1", "2", "3", "4"})
+	intNumbers := polyfill.Map(strNumbers, func(s string) any {
+		n, _ := strconv.Atoi(s)
+		return n
+	}).
 		Unwrap()
 
 	fmt.Println("Converted numbers:", intNumbers) // [1, 2, 3, 4]
