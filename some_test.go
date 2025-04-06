@@ -1,63 +1,26 @@
-package polyfill
+package polyfill_test
 
 import (
-	"github.com/stretchr/testify/assert"
+	"github.com/lofidv/polyfill"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSome(t *testing.T) {
-	t.Run("testArray", testArraySome)
-	t.Run("testStruct", testStructsSome)
-}
+	t.Run("some elements match", func(t *testing.T) {
+		nums := []int{1, 3, 5, 7, 8}
+		result := polyfill.Wrap(nums).
+			Some(func(n int) bool { return n%2 == 0 })
 
-type testCaseSome[V, T any] struct {
-	name     string
-	seed     []V
-	expected bool
-	fn       func(V) bool
-}
+		assert.True(t, result)
+	})
 
-func testArraySome(t *testing.T) {
-	t.Parallel()
-	testsIns := []testCaseSome[int, int]{
-		{
-			name:     "are there values even?",
-			seed:     []int{1, 2, 3, 4, 5, 6},
-			expected: true,
-			fn:       func(a int) bool { return a%2 == 0 },
-		},
-	}
+	t.Run("no elements match", func(t *testing.T) {
+		words := []string{"apple", "banana", "cherry"}
+		result := polyfill.Wrap(words).
+			Some(func(s string) bool { return len(s) > 10 })
 
-	for _, tc := range testsIns {
-		t.Run(tc.name, runTestCaseSome(tc))
-	}
-}
-
-func testStructsSome(t *testing.T) {
-	t.Parallel()
-	var personsList persons
-	personsList = append(personsList, person{Name: "person 10", Age: 10})
-	personsList = append(personsList, person{Name: "person 15", Age: 15})
-	personsList = append(personsList, person{Name: "person 18", Age: 18})
-	personsList = append(personsList, person{Name: "person 20", Age: 20})
-
-	testPersons := []testCaseSome[person, person]{
-		{
-			name:     "Is there someone with 25 years?",
-			seed:     personsList,
-			expected: false,
-			fn:       func(a person) bool { return a.Age == 25 },
-		},
-	}
-
-	for _, tc := range testPersons {
-		t.Run(tc.name, runTestCaseSome(tc))
-	}
-}
-
-func runTestCaseSome[V, T any](tc testCaseSome[V, T]) func(t *testing.T) {
-	return func(t *testing.T) {
-		res := NewSlice[V, T](tc.seed...).Some(tc.fn)
-		assert.Equal(t, res, tc.expected)
-	}
+		assert.False(t, result)
+	})
 }

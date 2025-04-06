@@ -1,86 +1,44 @@
-package polyfill
+package polyfill_test
 
 import (
-	"github.com/stretchr/testify/assert"
+	"github.com/lofidv/polyfill"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFind(t *testing.T) {
-	t.Run("testArray", testArrayFind)
-	t.Run("testStruct", testStructsFind)
-}
-
-type testCaseFind[V, T any] struct {
-	name     string
-	seed     []V
-	expected V
-	fn       func(V) bool
-}
-
-func testArrayFind(t *testing.T) {
-	t.Parallel()
-	testsIns := []testCaseFind[int, int]{
-		{
-			name:     "i == 1",
-			seed:     []int{1, 2, 3, 4},
-			expected: 1,
-			fn:       func(i int) bool { return i == 1 },
-		},
-		{
-			name:     "i == 6",
-			seed:     []int{1, 2, 3, 4},
-			expected: 0,
-			fn:       func(i int) bool { return i == 6 },
-		},
+	type person struct {
+		Name string
+		Age  int
 	}
 
-	for _, tc := range testsIns {
-		t.Run(tc.name, runTestCaseFind(tc))
+	people := []person{
+		{"Alice", 25},
+		{"Bob", 30},
+		{"Charlie", 35},
 	}
 
-	testsStrings := []testCaseFind[string, int]{
-		{
-			name:     "i == a",
-			seed:     []string{"a", "b", "c", "d"},
-			expected: "a",
-			fn:       func(a string) bool { return a == "a" },
-		},
-	}
+	t.Run("find existing element", func(t *testing.T) {
+		p, found := polyfill.Wrap(people).
+			Find(func(p person) bool { return p.Name == "Bob" })
 
-	for _, tc := range testsStrings {
-		t.Run(tc.name, runTestCaseFind(tc))
-	}
+		assert.True(t, found)
+		assert.Equal(t, "Bob", p.Name)
+	})
 
-}
+	t.Run("find non-existing element", func(t *testing.T) {
+		_, found := polyfill.Wrap(people).
+			Find(func(p person) bool { return p.Name == "David" })
 
-func testStructsFind(t *testing.T) {
-	t.Parallel()
-	var personsList persons
-	personsList = append(personsList, person{Name: "person 10", Age: 10})
-	personsList = append(personsList, person{Name: "person 15", Age: 15})
-	personsList = append(personsList, person{Name: "person 18", Age: 18})
-	personsList = append(personsList, person{Name: "person 20", Age: 20})
+		assert.False(t, found)
+	})
 
-	testPersons := []testCaseFind[person, person]{
-		{
-			name: "p.age == 18",
-			seed: personsList,
-			expected: person{
-				Name: "person 18",
-				Age:  18,
-			},
-			fn: func(p person) bool { return p.Age == 18 },
-		},
-	}
+	t.Run("find in empty slice", func(t *testing.T) {
+		empty := []int{}
+		_, found := polyfill.Wrap(empty).
+			Find(func(n int) bool { return n > 10 })
 
-	for _, tc := range testPersons {
-		t.Run(tc.name, runTestCaseFind(tc))
-	}
-}
-
-func runTestCaseFind[V, T any](tc testCaseFind[V, T]) func(t *testing.T) {
-	return func(t *testing.T) {
-		res := NewSlice[V, T](tc.seed...).Find(tc.fn)
-		assert.Equal(t, res, tc.expected)
-	}
+		assert.False(t, found)
+	})
 }

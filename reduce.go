@@ -1,10 +1,10 @@
 package polyfill
 
-func (s Slice[V, T]) Reduce(acc func(T, V) T, init T) T {
-	r := init
-	for _, v := range s {
-		r = acc(r, v)
+// Reduce reduces the slice to a single value
+func (s *Slice[T]) Reduce(initial any, f func(acc any, val T) any) any {
+	acc := initial
+	for _, v := range s.elements {
+		acc = f(acc, v)
 	}
-
-	return r
+	return acc
 }

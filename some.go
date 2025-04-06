@@ -1,11 +1,11 @@
 package polyfill
 
-func (s Slice[V, T]) Some(predicate func(V) bool) bool {
-	for _, slice := range s {
-		if predicate(slice) {
+// Some tests whether at least one element satisfies the predicate
+func (s *Slice[T]) Some(f func(T) bool) bool {
+	for _, v := range s.elements {
+		if f(v) {
 			return true
 		}
 	}
-
 	return false
 }

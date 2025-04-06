@@ -1,11 +1,11 @@
 package polyfill
 
-func (s Slice[V, T]) IndexOf(predicate func(V, T) bool, criteria T, start int) int {
-	for i := start; i < len(s); i++ {
-		if predicate(s[i], criteria) {
+// IndexOf returns the index of the first matching element or -1
+func (s *Slice[T]) IndexOf(f func(T) bool) int {
+	for i, v := range s.elements {
+		if f(v) {
 			return i
 		}
 	}
-
 	return -1
 }

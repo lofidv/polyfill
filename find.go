@@ -1,12 +1,12 @@
 package polyfill
 
-func (s Slice[V, T]) Find(f func(V) bool) V {
-	var slice V
-	for _, t := range s {
-		if f(t) {
-			slice = t
+// Find returns the first element that satisfies the predicate
+func (s *Slice[T]) Find(f func(T) bool) (T, bool) {
+	for _, v := range s.elements {
+		if f(v) {
+			return v, true
 		}
 	}
-
-	return slice
+	var zero T
+	return zero, false
 }

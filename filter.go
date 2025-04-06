@@ -1,12 +1,12 @@
 package polyfill
 
-func (s Slice[V, T]) Filter(f func(V) bool) Slice[V, T] {
-	slice := Slice[V, T]{}
-	for _, t := range s {
-		if f(t) {
-			slice = append(slice, t)
+// Filter returns a new slice with elements that satisfy the predicate
+func (s *Slice[T]) Filter(f func(T) bool) *Slice[T] {
+	result := make([]T, 0, len(s.elements))
+	for _, v := range s.elements {
+		if f(v) {
+			result = append(result, v)
 		}
 	}
-
-	return slice
+	return Wrap(result)
 }

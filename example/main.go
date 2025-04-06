@@ -6,133 +6,134 @@ import (
 	"strconv"
 )
 
-type person struct {
+type Person struct {
 	Name string
 	Age  int
 }
 
-type persons []person
-
-func (p person) isAdult() bool {
+func (p Person) IsAdult() bool {
 	return p.Age >= 18
 }
 
-func (p persons) len() int {
-	return len(p)
-}
-
-type adolescent struct {
-	Name string
-	Age  int
-}
-
-type adolescents []adolescent
-
-func (p adolescents) len() int {
-	return len(p)
-}
-
-type pet struct {
+type Pet struct {
 	Name string
 	Age  int
 	Type string
 }
 
-type pets []pet
-
 func main() {
-	var personsList persons
-	personsList = append(personsList, person{Name: "person 10", Age: 10})
-	personsList = append(personsList, person{Name: "person 15", Age: 15})
-	personsList = append(personsList, person{Name: "person 18", Age: 18})
-	personsList = append(personsList, person{Name: "person 20", Age: 20})
+	// 1. Basic Filter and Map operations
+	people := []Person{
+		{"Alice", 25},
+		{"Bob", 17},
+		{"Charlie", 19},
+		{"David", 16},
+	}
 
-        onlyAdults := polyfill.NewSlice[person, person](personsList...).Filter(func(p person) bool {
-                return !p.isAdult()
-        })
+	// Filter adults and map to names
+	adultNames := polyfill.Wrap(people).
+		Filter(func(p Person) bool { return p.IsAdult() }).
+		Map(func(person Person) any {
+			return person.Name
+		}).
+		Unwrap()
 
-        fmt.Println(onlyAdults)
+	fmt.Println("Adult names:", adultNames) // ["Alice", "Charlie"]
 
-	s := polyfill.NewSlice[person, adolescent](personsList...)
-	res := s.Filter(func(p person) bool {
-		return !p.isAdult()
-	}).Map(func(p person) adolescent {
-		return adolescent{Name: p.Name, Age: p.Age}
-	})
+	// 2. Parallel Map demonstration
+	numbers := []int{1, 2, 3, 4, 5}
+	squared := polyfill.Wrap(numbers).
+		ParallelMap(func(n int) any { return n * n }).
+		Unwrap()
 
-	fmt.Println(res) //[{person 10 10} {person 15 15}]
+	fmt.Println("Squared numbers:", squared) // [1, 4, 9, 16, 25]
 
-	var p = adolescents(res)
-	fmt.Println(p.len()) // 2
+	// 3. Reduce example
+	sum := polyfill.Wrap(numbers).
+		Reduce(0, func(acc any, n int) any { return acc.(int) + n })
 
-	str := polyfill.NewSlice[string, int]([]string{"1", "2", "3", "4", "5"}...)
-	resStr := str.Map(func(s string) int {
-		v, _ := strconv.Atoi(s)
-		return v
-	})
+	fmt.Println("Sum of numbers:", sum) // 15
 
-	fmt.Println(resStr) //[1 2 3 4 5]
+	// 4. Find and IndexOf
+	bob, found := polyfill.Wrap(people).
+		Find(func(p Person) bool { return p.Name == "Bob" })
 
-	resReduce := polyfill.NewSlice[int, int]([]int{1, 2}...).Reduce(func(acc, el int) int {
-		return acc + el
-	}, 0)
+	fmt.Printf("Found Bob: %v (%v)\n", bob, found) // {Bob 17} true
 
-	fmt.Println(resReduce) //3
+	bobIndex := polyfill.Wrap(people).
+		IndexOf(func(p Person) bool { return p.Name == "Bob" })
 
-	var petList pets
-	petList = append(petList, pet{Name: "Purin", Age: 12, Type: "dog"})
-	petList = append(petList, pet{Name: "Cinnamoroll", Age: 1, Type: "dog"})
-	petList = append(petList, pet{Name: "Melody", Age: 1, Type: "rabbit"})
-	petList = append(petList, pet{Name: "Kitty", Age: 1, Type: "cat"})
+	fmt.Println("Bob's index:", bobIndex) // 1
 
-	type petMap map[string]pet
+	// 5. Some and Every
+	hasAdults := polyfill.Wrap(people).
+		Some(func(p Person) bool { return p.IsAdult() })
 
-	indexed := polyfill.NewSlice[pet, petMap](petList...).Reduce(func(acc petMap, el pet) petMap {
-		acc[el.Name] = el
-		return acc
-	}, petMap{})
+	allAdults := polyfill.Wrap(people).
+		Every(func(p Person) bool { return p.IsAdult() })
 
-	fmt.Println(indexed) ////map[Cinnamoroll:{Cinnamoroll 1 dog} Kitty:{Kitty 1 cat} Melody:{Melody 1 rabbit} Purin:{Purin 12 dog}]
+	fmt.Printf("Has adults: %v, All adults: %v\n", hasAdults, allAdults) // true, false
 
-	arr := []int{45, 73, 12, 98, 7, 30, 12, 85}
-	index := polyfill.NewSlice[int, int](arr...).IndexOf(func(a, index int) bool {
-		return a == index
-	}, 12, 3)
-	fmt.Println(index) //6
+	// 6. Chunk and Reverse
+	chunks := polyfill.Wrap(numbers).Chunk(2)
+	fmt.Println("Chunks:")
+	for _, chunk := range chunks {
+		fmt.Println(chunk.Unwrap())
+	}
+	// [1 2]
+	// [3 4]
+	// [5]
 
-	var petListTwo pets
-	petListTwo = append(petListTwo, pet{Name: "Purin", Age: 12, Type: "dog"})
-	petListTwo = append(petListTwo, pet{Name: "Cinnamoroll", Age: 1, Type: "dog"})
-	petListTwo = append(petListTwo, pet{Name: "Melody", Age: 1, Type: "rabbit"})
-	petListTwo = append(petListTwo, pet{Name: "Kitty", Age: 1, Type: "cat"})
+	reversed := polyfill.Wrap(numbers).Reverse().Unwrap()
+	fmt.Println("Reversed numbers:", reversed) // [5, 4, 3, 2, 1]
 
-	indexPet := polyfill.NewSlice[pet, string](petListTwo...).IndexOf(func(a pet, criteria string) bool {
-		return a.Name == criteria
-	}, "Cinnamoroll", 0)
+	// 7. Sort
+	unsorted := []int{3, 1, 4, 2}
+	sorted := polyfill.Wrap(unsorted).
+		Sort(func(a, b int) bool { return a < b }).
+		Unwrap()
 
-	fmt.Println(indexPet)
+	fmt.Println("Sorted numbers:", sorted) // [1, 2, 3, 4]
 
-	sliceSomeTest := []int{1, 2, 3, 4, 5, 6}
-	resultSome := polyfill.NewSlice[int, int](sliceSomeTest...).Some(func(i int) bool {
-		return i%2 == 0
-	})
+	// 8. Unique with custom equality
+	duplicates := []int{1, 2, 2, 3, 4, 4, 5}
+	unique := polyfill.Wrap(duplicates).
+		Unique(func(a, b int) bool { return a == b }).
+		Unwrap()
 
-	fmt.Println(resultSome)
+	fmt.Println("Unique numbers:", unique) // [1, 2, 3, 4, 5]
 
-	var sliceSomeTestPet pets
-	sliceSomeTestPet = append(sliceSomeTestPet, pet{Name: "Purin", Age: 12, Type: "dog"})
-	sliceSomeTestPet = append(sliceSomeTestPet, pet{Name: "Cinnamoroll", Age: 1, Type: "dog"})
-	sliceSomeTestPet = append(sliceSomeTestPet, pet{Name: "Melody", Age: 1, Type: "rabbit"})
-	sliceSomeTestPet = append(sliceSomeTestPet, pet{Name: "Kitty", Age: 1, Type: "cat"})
+	// 9. String conversion
+	strNumbers := []string{"1", "2", "3", "4"}
+	intNumbers := polyfill.Wrap(strNumbers).
+		Map(func(s string) any {
+			n, _ := strconv.Atoi(s)
+			return n
+		}).
+		Unwrap()
 
-	resultSomePet := polyfill.NewSlice[pet, pet](sliceSomeTestPet...).Some(func(p pet) bool {
-		return p.Age == 12
-	})
+	fmt.Println("Converted numbers:", intNumbers) // [1, 2, 3, 4]
 
-	fmt.Println(resultSomePet)
+	// 10. Complex Reduce - group pets by type
+	pets := []Pet{
+		{"Fido", 3, "dog"},
+		{"Whiskers", 2, "cat"},
+		{"Rover", 5, "dog"},
+		{"Mittens", 1, "cat"},
+	}
 
-	resultFind := polyfill.NewSlice[pet, pet](sliceSomeTestPet...).Find(func(p pet) bool {
-		return p.Age == 12
-	})
-	fmt.Println(resultFind)
+	type PetGroup map[string][]Pet
+	grouped := polyfill.Wrap(pets).
+		Reduce(make(PetGroup), func(acc any, p Pet) any {
+			group := acc.(PetGroup)
+			group[p.Type] = append(group[p.Type], p)
+			return group
+		}).(PetGroup)
+
+	fmt.Println("Pets grouped by type:")
+	for typ, pets := range grouped {
+		fmt.Printf("%s: %v\n", typ, pets)
+	}
+	// dog: [{Fido 3 dog} {Rover 5 dog}]
+	// cat: [{Whiskers 2 cat} {Mittens 1 cat}]
 }
