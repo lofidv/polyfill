@@ -172,6 +172,23 @@ func main() {
 	}
 	// dog: [{Fido 3 dog} {Rover 5 dog}]
 	// cat: [{Whiskers 2 cat} {Mittens 1 cat}]
+
+	c := polyfill.NewCache[string, int](polyfill.Config{
+		DefaultTTL: 5 * time.Minute,
+		MaxItems:   1000,
+		OnEvict: func(k, v any, r polyfill.EvictReason) {
+			// log.Printf("evicted %v (%v): %v", k, r, v)
+		},
+	})
+
+	_ = c.Add("x", 1, -1)               // -1 => no expiration
+	c.Set("y", 2, 10*time.Second)       // item TTL
+	v, ok := c.Get("x")                 // 1, true
+	_ = c.Update("x", func(p *int) error { *p += 41; return nil })
+	val, _ := c.GetOrSet("z", func() (int, time.Duration, error) { return 3, 0, nil })
+	_ = val
+	_ = ok
+	_ = v
 }
 ```
 
