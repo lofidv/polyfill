@@ -10,7 +10,7 @@ import (
 func TestEvery(t *testing.T) {
 	t.Run("all elements match", func(t *testing.T) {
 		nums := []int{2, 4, 6, 8}
-		result := polyfill.Wrap(nums).
+		result := polyfill.From(nums).
 			Every(func(n int) bool { return n%2 == 0 })
 
 		assert.True(t, result)
@@ -18,7 +18,7 @@ func TestEvery(t *testing.T) {
 
 	t.Run("not all elements match", func(t *testing.T) {
 		words := []string{"apple", "banana", "cherry", "date"}
-		result := polyfill.Wrap(words).
+		result := polyfill.From(words).
 			Every(func(s string) bool { return len(s) > 4 })
 
 		assert.False(t, result)

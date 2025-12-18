@@ -32,45 +32,41 @@ func main() {
 		{"David", 16},
 	}
 
-	wrappedPeople := polyfill.Wrap(people)
-	adults := wrappedPeople.Filter(func(p Person) bool {
-		return p.IsAdult()
-	})
-
-	// Filter adults and map to names
-	adultNames := polyfill.Map(adults, func(p Person) string {
-		return p.Name
-	}).Unwrap()
+	// Filter adults and map to names - demonstrating chainable API
+	adultNames := polyfill.MapTo(
+		polyfill.From(people).Filter(func(p Person) bool { return p.IsAdult() }),
+		func(p Person) string { return p.Name },
+	).Slice()
 
 	fmt.Println("Adult names:", adultNames) // ["Alice", "Charlie"]
 
 	// 2. Parallel Map demonstration
-	numbers := polyfill.Wrap([]int{1, 2, 3, 4, 5})
-	squared := polyfill.ParallelMap(numbers, func(n int) any { return n * n }).Unwrap()
+	numbers := polyfill.From([]int{1, 2, 3, 4, 5})
+	squared := numbers.Parallel().Map(func(n int) int { return n * n }).Slice()
 
 	fmt.Println("Squared numbers:", squared) // [1, 4, 9, 16, 25]
 
-	// 3. Reduce example
-	sum := numbers.Reduce(0, func(acc any, n int) any { return acc.(int) + n })
+	// 3. Reduce example with type safety
+	sum := polyfill.Reduce(numbers, 0, func(acc int, n int) int { return acc + n })
 
 	fmt.Println("Sum of numbers:", sum) // 15
 
-	// 4. Find and IndexOf
-	bob, found := polyfill.Wrap(people).
+	// 4. Find and FindIndex
+	bob, found := polyfill.From(people).
 		Find(func(p Person) bool { return p.Name == "Bob" })
 
 	fmt.Printf("Found Bob: %v (%v)\n", bob, found) // {Bob 17} true
 
-	bobIndex := polyfill.Wrap(people).
-		IndexOf(func(p Person) bool { return p.Name == "Bob" })
+	bobIndex := polyfill.From(people).
+		FindIndex(func(p Person) bool { return p.Name == "Bob" })
 
 	fmt.Println("Bob's index:", bobIndex) // 1
 
 	// 5. Some and Every
-	hasAdults := polyfill.Wrap(people).
+	hasAdults := polyfill.From(people).
 		Some(func(p Person) bool { return p.IsAdult() })
 
-	allAdults := polyfill.Wrap(people).
+	allAdults := polyfill.From(people).
 		Every(func(p Person) bool { return p.IsAdult() })
 
 	fmt.Printf("Has adults: %v, All adults: %v\n", hasAdults, allAdults) // true, false
@@ -79,42 +75,39 @@ func main() {
 	chunks := numbers.Chunk(2)
 	fmt.Println("Chunks:")
 	for _, chunk := range chunks {
-		fmt.Println(chunk.Unwrap())
+		fmt.Println(chunk)
 	}
 	// [1 2]
 	// [3 4]
 	// [5]
 
-	reversed := numbers.Reverse().Unwrap()
+	reversed := numbers.Reverse().Slice()
 	fmt.Println("Reversed numbers:", reversed) // [5, 4, 3, 2, 1]
 
 	// 7. Sort
 	unsorted := []int{3, 1, 4, 2}
-	sorted := polyfill.Wrap(unsorted).
+	sorted := polyfill.From(unsorted).
 		Sort(func(a, b int) bool { return a < b }).
-		Unwrap()
+		Slice()
 
 	fmt.Println("Sorted numbers:", sorted) // [1, 2, 3, 4]
 
-	// 8. Unique with custom equality
+	// 8. Unique (for comparable types)
 	duplicates := []int{1, 2, 2, 3, 4, 4, 5}
-	unique := polyfill.Wrap(duplicates).
-		Unique(func(a, b int) bool { return a == b }).
-		Unwrap()
+	unique := polyfill.Unique(polyfill.From(duplicates)).Slice()
 
 	fmt.Println("Unique numbers:", unique) // [1, 2, 3, 4, 5]
 
-	// 9. String conversion
-	strNumbers := polyfill.Wrap([]string{"1", "2", "3", "4"})
-	intNumbers := polyfill.Map(strNumbers, func(s string) any {
+	// 9. String conversion with type safety
+	strNumbers := polyfill.From([]string{"1", "2", "3", "4"})
+	intNumbers := polyfill.MapTo(strNumbers, func(s string) int {
 		n, _ := strconv.Atoi(s)
 		return n
-	}).
-		Unwrap()
+	}).Slice()
 
 	fmt.Println("Converted numbers:", intNumbers) // [1, 2, 3, 4]
 
-	// 10. Complex Reduce - group pets by type
+	// 10. GroupBy - killer feature!
 	pets := []Pet{
 		{"Fido", 3, "dog"},
 		{"Whiskers", 2, "cat"},
@@ -122,13 +115,9 @@ func main() {
 		{"Mittens", 1, "cat"},
 	}
 
-	type PetGroup map[string][]Pet
-	grouped := polyfill.Wrap(pets).
-		Reduce(make(PetGroup), func(acc any, p Pet) any {
-			group := acc.(PetGroup)
-			group[p.Type] = append(group[p.Type], p)
-			return group
-		}).(PetGroup)
+	grouped := polyfill.GroupBy(polyfill.From(pets), func(p Pet) string {
+		return p.Type
+	})
 
 	fmt.Println("Pets grouped by type:")
 	for typ, pets := range grouped {
@@ -137,6 +126,52 @@ func main() {
 	// dog: [{Fido 3 dog} {Rover 5 dog}]
 	// cat: [{Whiskers 2 cat} {Mittens 1 cat}]
 
+	// 11. New utility methods
+	fmt.Println("\n--- New Utility Methods ---")
+
+	// Take and Skip
+	first3 := numbers.Take(3).Slice()
+	fmt.Println("First 3 numbers:", first3) // [1, 2, 3]
+
+	skip2 := numbers.Skip(2).Slice()
+	fmt.Println("Skip 2 numbers:", skip2) // [3, 4, 5]
+
+	// At method with negative indices
+	if val, ok := numbers.At(2); ok {
+		fmt.Printf("Element at index 2: %d\n", val) // 3
+	}
+
+	if first, ok := numbers.At(0); ok {
+		fmt.Printf("First element: %d\n", first) // 1
+	}
+
+	if last, ok := numbers.At(-1); ok {
+		fmt.Printf("Last element: %d\n", last) // 5
+	}
+
+	// FlatMap
+	words := []string{"hello world", "foo bar"}
+	allWords := polyfill.FlatMap(polyfill.From(words), func(s string) []string {
+		var parts []string
+		current := ""
+		for _, ch := range s {
+			if ch == ' ' {
+				if current != "" {
+					parts = append(parts, current)
+					current = ""
+				}
+			} else {
+				current += string(ch)
+			}
+		}
+		if current != "" {
+			parts = append(parts, current)
+		}
+		return parts
+	}).Slice()
+	fmt.Println("FlatMap result:", allWords) // [hello world foo bar]
+
+	// 12. Cache example
 	c := polyfill.NewCache[string, int](polyfill.Config{
 		DefaultTTL: 5 * time.Minute,
 		MaxItems:   1000,

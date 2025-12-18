@@ -20,7 +20,7 @@ func TestFind(t *testing.T) {
 	}
 
 	t.Run("find existing element", func(t *testing.T) {
-		p, found := polyfill.Wrap(people).
+		p, found := polyfill.From(people).
 			Find(func(p person) bool { return p.Name == "Bob" })
 
 		assert.True(t, found)
@@ -28,7 +28,7 @@ func TestFind(t *testing.T) {
 	})
 
 	t.Run("find non-existing element", func(t *testing.T) {
-		_, found := polyfill.Wrap(people).
+		_, found := polyfill.From(people).
 			Find(func(p person) bool { return p.Name == "David" })
 
 		assert.False(t, found)
@@ -36,7 +36,7 @@ func TestFind(t *testing.T) {
 
 	t.Run("find in empty slice", func(t *testing.T) {
 		empty := []int{}
-		_, found := polyfill.Wrap(empty).
+		_, found := polyfill.From(empty).
 			Find(func(n int) bool { return n > 10 })
 
 		assert.False(t, found)

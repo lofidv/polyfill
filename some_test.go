@@ -10,7 +10,7 @@ import (
 func TestSome(t *testing.T) {
 	t.Run("some elements match", func(t *testing.T) {
 		nums := []int{1, 3, 5, 7, 8}
-		result := polyfill.Wrap(nums).
+		result := polyfill.From(nums).
 			Some(func(n int) bool { return n%2 == 0 })
 
 		assert.True(t, result)
@@ -18,7 +18,7 @@ func TestSome(t *testing.T) {
 
 	t.Run("no elements match", func(t *testing.T) {
 		words := []string{"apple", "banana", "cherry"}
-		result := polyfill.Wrap(words).
+		result := polyfill.From(words).
 			Some(func(s string) bool { return len(s) > 10 })
 
 		assert.False(t, result)

@@ -10,27 +10,27 @@ import (
 func TestFilter(t *testing.T) {
 	t.Run("filter even numbers", func(t *testing.T) {
 		nums := []int{1, 2, 3, 4, 5, 6}
-		result := polyfill.Wrap(nums).
+		result := polyfill.From(nums).
 			Filter(func(n int) bool { return n%2 == 0 }).
-			Unwrap()
+			Slice()
 
 		assert.Equal(t, []int{2, 4, 6}, result)
 	})
 
 	t.Run("filter with no matches", func(t *testing.T) {
 		words := []string{"apple", "banana", "cherry"}
-		result := polyfill.Wrap(words).
+		result := polyfill.From(words).
 			Filter(func(s string) bool { return len(s) > 10 }).
-			Unwrap()
+			Slice()
 
 		assert.Empty(t, result)
 	})
 
 	t.Run("filter empty slice", func(t *testing.T) {
 		empty := []bool{}
-		result := polyfill.Wrap(empty).
+		result := polyfill.From(empty).
 			Filter(func(b bool) bool { return b }).
-			Unwrap()
+			Slice()
 
 		assert.Empty(t, result)
 	})

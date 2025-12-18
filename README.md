@@ -1,216 +1,493 @@
-# Polyfill
+<div align="center">
 
-[![Go report](https://goreportcard.com/badge/github.com/lofidv/polyfill)](https://goreportcard.com/report/github.com/lofidv/polyfill)
+# 🚀 Polyfill
 
-✨ **`lofidv/polyfill` is a Go library based on Go 1.18+ Generics.**
+### *JavaScript-inspired functional programming for Go*
 
-This project started as an experiment with the implementation of new generics. It may look like simple js functions but it is fully integrated and functional with arrays and structures.
+[![Go Report](https://goreportcard.com/badge/github.com/lofidv/polyfill)](https://goreportcard.com/report/github.com/lofidv/polyfill)
+[![Go Reference](https://pkg.go.dev/badge/github.com/lofidv/polyfill.svg)](https://pkg.go.dev/github.com/lofidv/polyfill)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-As expected, generics will be much faster than implementations based on the "reflect" package. Benchmarks also show similar performance gains compared to pure `for` loops.
+*Bring the power and elegance of JavaScript's array methods to Go with full type safety and zero reflection overhead.*
 
-I feel this library is legitimate and offers many more valuable abstractions.
+[Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Examples](#-examples)
 
-**Why this name?**
+</div>
 
-I wanted a **popular name**, similar to "js" and no Go package currently uses this name.
+---
 
-## 🚀 Install
+## ✨ Features
 
-```sh
+<table>
+<tr>
+<td>
+
+🎯 **JavaScript-Inspired**
+<br/>Familiar API from JS/TS with Go's type safety
+
+</td>
+<td>
+
+⚡ **Zero Overhead**
+<br/>Pure generics, no reflection, blazing fast
+
+</td>
+</tr>
+<tr>
+<td>
+
+🔗 **Chainable**
+<br/>Fluent interface for elegant pipelines
+
+</td>
+<td>
+
+🛡️ **Type Safe**
+<br/>Compile-time guarantees, no runtime panics
+
+</td>
+</tr>
+<tr>
+<td>
+
+🚄 **Parallel Ready**
+<br/>Built-in concurrent processing
+
+</td>
+<td>
+
+💎 **Rich API**
+<br/>50+ methods for array manipulation
+
+</td>
+</tr>
+</table>
+
+## 🎯 Why Polyfill?
+
+```go
+// Before: Verbose Go loops
+var adults []string
+for _, p := range people {
+    if p.Age >= 18 {
+        adults = append(adults, p.Name)
+    }
+}
+
+// After: Expressive Polyfill
+adults := polyfill.MapTo(
+    polyfill.From(people).Filter(func(p Person) bool { 
+        return p.Age >= 18 
+    }),
+    func(p Person) string { return p.Name },
+).Slice()
+```
+
+## 📦 Installation
+
+```bash
 go get github.com/lofidv/polyfill
 ```
 
-This library is on beta.
+**Requirements:** Go 1.18+ (generics support)
 
-## 💡 Usage
-
-You can import `polyfill` using:
-
-```go
-import (
-"github.com/lofidv/polyfill"
-)
-```
-
-Then use it like this:
+## 🚀 Quick Start
 
 ```go
 package main
 
 import (
-	"fmt"
-	"github.com/lofidv/polyfill"
-	"strconv"
+    "fmt"
+    "github.com/lofidv/polyfill"
 )
 
 type Person struct {
-	Name string
-	Age  int
-}
-
-func (p Person) IsAdult() bool {
-	return p.Age >= 18
-}
-
-type Pet struct {
-	Name string
-	Age  int
-	Type string
+    Name string
+    Age  int
 }
 
 func main() {
-	// 1. Basic Filter and Map operations
-	people := []Person{
-		{"Alice", 25},
-		{"Bob", 17},
-		{"Charlie", 19},
-		{"David", 16},
-	}
+    people := []Person{
+        {"Alice", 25},
+        {"Bob", 17},
+        {"Charlie", 19},
+    }
 
-	// Filter adults and map to names
-	adultNames := polyfill.Wrap(people).
-		Filter(func(p Person) bool { return p.IsAdult() }).
-		Map(func(person Person) any {
-			return person.Name
-		}).
-		Unwrap()
+    // Filter adults and get their names
+    adultNames := polyfill.MapTo(
+        polyfill.From(people).Filter(func(p Person) bool { 
+            return p.Age >= 18 
+        }),
+        func(p Person) string { return p.Name },
+    ).Slice()
 
-	fmt.Println("Adult names:", adultNames) // ["Alice", "Charlie"]
+    fmt.Println(adultNames) // [Alice Charlie]
+}
+```
 
-	// 2. Parallel Map demonstration
-	numbers := []int{1, 2, 3, 4, 5}
-	squared := polyfill.Wrap(numbers).
-		ParallelMap(func(n int) any { return n * n }).
-		Unwrap()
+## 📚 Documentation
 
-	fmt.Println("Squared numbers:", squared) // [1, 4, 9, 16, 25]
+### Core API
 
-	// 3. Reduce example
-	sum := polyfill.Wrap(numbers).
-		Reduce(0, func(acc any, n int) any { return acc.(int) + n })
+#### Creating Sequences
 
-	fmt.Println("Sum of numbers:", sum) // 15
+```go
+// From slice
+seq := polyfill.From([]int{1, 2, 3, 4, 5})
 
-	// 4. Find and IndexOf
-	bob, found := polyfill.Wrap(people).
-		Find(func(p Person) bool { return p.Name == "Bob" })
+// Back to slice
+numbers := seq.Slice()
 
-	fmt.Printf("Found Bob: %v (%v)\n", bob, found) // {Bob 17} true
+// With error handling
+numbers, err := seq.SliceE()
+```
 
-	bobIndex := polyfill.Wrap(people).
-		IndexOf(func(p Person) bool { return p.Name == "Bob" })
+### 🔍 Filtering & Searching
 
-	fmt.Println("Bob's index:", bobIndex) // 1
+<details>
+<summary><b>Filter, Find, Some, Every</b></summary>
 
-	// 5. Some and Every
-	hasAdults := polyfill.Wrap(people).
-		Some(func(p Person) bool { return p.IsAdult() })
+```go
+// Filter elements
+adults := polyfill.From(people).
+    Filter(func(p Person) bool { return p.Age >= 18 }).
+    Slice()
 
-	allAdults := polyfill.Wrap(people).
-		Every(func(p Person) bool { return p.IsAdult() })
+// Find first match
+person, found := polyfill.From(people).
+    Find(func(p Person) bool { return p.Name == "Alice" })
 
-	fmt.Printf("Has adults: %v, All adults: %v\n", hasAdults, allAdults) // true, false
+// Find index
+index := polyfill.From(people).
+    FindIndex(func(p Person) bool { return p.Name == "Bob" })
 
-	// 6. Chunk and Reverse
-	chunks := polyfill.Wrap(numbers).Chunk(2)
-	fmt.Println("Chunks:")
-	for _, chunk := range chunks {
-		fmt.Println(chunk.Unwrap())
-	}
-	// [1 2]
-	// [3 4]
-	// [5]
+// Check if any element matches
+hasAdults := polyfill.From(people).
+    Some(func(p Person) bool { return p.Age >= 18 })
 
-	reversed := polyfill.Wrap(numbers).Reverse().Unwrap()
-	fmt.Println("Reversed numbers:", reversed) // [5, 4, 3, 2, 1]
+// Check if all elements match
+allAdults := polyfill.From(people).
+    Every(func(p Person) bool { return p.Age >= 18 })
+```
 
-	// 7. Sort
-	unsorted := []int{3, 1, 4, 2}
-	sorted := polyfill.Wrap(unsorted).
-		Sort(func(a, b int) bool { return a < b }).
-		Unwrap()
+</details>
 
-	fmt.Println("Sorted numbers:", sorted) // [1, 2, 3, 4]
+### 🔄 Transforming
 
-	// 8. Unique with custom equality
-	duplicates := []int{1, 2, 2, 3, 4, 4, 5}
-	unique := polyfill.Wrap(duplicates).
-		Unique(func(a, b int) bool { return a == b }).
-		Unwrap()
+<details>
+<summary><b>Map, FlatMap, Reduce</b></summary>
 
-	fmt.Println("Unique numbers:", unique) // [1, 2, 3, 4, 5]
+**Important:** Due to Go's limitations on method type parameters:
+- Use **methods** for same-type transformations (T → T)
+- Use **functions** for type-changing transformations (T → R)
 
-	// 9. String conversion
-	strNumbers := []string{"1", "2", "3", "4"}
-	intNumbers := polyfill.Wrap(strNumbers).
-		Map(func(s string) any {
-			n, _ := strconv.Atoi(s)
-			return n
-		}).
-		Unwrap()
+```go
+// Map same type (method)
+doubled := polyfill.From([]int{1, 2, 3}).
+    Map(func(n int) int { return n * 2 }).
+    Slice()
 
-	fmt.Println("Converted numbers:", intNumbers) // [1, 2, 3, 4]
+// Map with type change (function)
+names := polyfill.MapTo(
+    polyfill.From(people),
+    func(p Person) string { return p.Name },
+).Slice()
 
-	// 10. Complex Reduce - group pets by type
-	pets := []Pet{
-		{"Fido", 3, "dog"},
-		{"Whiskers", 2, "cat"},
-		{"Rover", 5, "dog"},
-		{"Mittens", 1, "cat"},
-	}
-	type PetGroup map[string][]Pet
-	grouped := polyfill.Wrap(pets).
-		Reduce(make(PetGroup), func(acc any, p Pet) any {
-			group := acc.(PetGroup)
-			group[p.Type] = append(group[p.Type], p)
-			return group
-		}).(PetGroup)
+// Map with error handling
+numbers, err := polyfill.MapToE(
+    polyfill.From([]string{"1", "2", "3"}),
+    strconv.Atoi,
+).SliceE()
 
-	fmt.Println("Pets grouped by type:")
-	for typ, pets := range grouped {
-		fmt.Printf("%s: %v\n", typ, pets)
-	}
-	// dog: [{Fido 3 dog} {Rover 5 dog}]
-	// cat: [{Whiskers 2 cat} {Mittens 1 cat}]
+// FlatMap
+words := polyfill.FlatMap(
+    polyfill.From([]string{"hello world", "foo bar"}),
+    func(s string) []string { return strings.Split(s, " ") },
+).Slice()
 
-	c := polyfill.NewCache[string, int](polyfill.Config{
-		DefaultTTL: 5 * time.Minute,
-		MaxItems:   1000,
-		OnEvict: func(k, v any, r polyfill.EvictReason) {
-			// log.Printf("evicted %v (%v): %v", k, r, v)
-		},
-	})
+// Reduce
+sum := polyfill.Reduce(
+    polyfill.From([]int{1, 2, 3, 4}),
+    0,
+    func(acc, n int) int { return acc + n },
+) // 10
+```
 
-	_ = c.Add("x", 1, -1)               // -1 => no expiration
-	c.Set("y", 2, 10*time.Second)       // item TTL
-	v, ok := c.Get("x")                 // 1, true
-	_ = c.Update("x", func(p *int) error { *p += 41; return nil })
-	val, _ := c.GetOrSet("z", func() (int, time.Duration, error) { return 3, 0, nil })
-	_ = val
-	_ = ok
-	_ = v
+</details>
+
+### 🎯 Grouping & Partitioning
+
+<details>
+<summary><b>GroupBy, Partition, Unique</b></summary>
+
+```go
+// GroupBy - killer feature!
+grouped := polyfill.GroupBy(
+    polyfill.From(pets),
+    func(p Pet) string { return p.Type },
+)
+// Returns: map[string][]Pet
+
+// Partition into two groups
+adults, minors := polyfill.From(people).
+    Partition(func(p Person) bool { return p.Age >= 18 })
+
+// Unique for comparable types
+unique := polyfill.Unique(
+    polyfill.From([]int{1, 2, 2, 3, 3, 4}),
+).Slice() // [1 2 3 4]
+
+// UniqueBy with custom key
+uniquePeople := polyfill.UniqueBy(
+    polyfill.From(people),
+    func(p Person) string { return p.Name },
+).Slice()
+```
+
+</details>
+
+### 🔀 Sorting & Reversing
+
+<details>
+<summary><b>Sort, Reverse (Immutable)</b></summary>
+
+```go
+// Sort (returns new sequence)
+sorted := polyfill.From([]int{3, 1, 4, 2}).
+    Sort(func(a, b int) bool { return a < b }).
+    Slice() // [1 2 3 4]
+
+// Reverse (returns new sequence)
+reversed := polyfill.From([]int{1, 2, 3}).
+    Reverse().
+    Slice() // [3 2 1]
+
+// Original unchanged - immutable operations!
+```
+
+</details>
+
+### ⚡ Parallel Execution
+
+<details>
+<summary><b>Process data concurrently</b></summary>
+
+```go
+// Basic parallel map
+squared := polyfill.From(numbers).
+    Parallel().
+    Map(func(n int) int { return n * n }).
+    Slice()
+
+// Configure workers and ordering
+results := polyfill.From(largeDataset).
+    Parallel().
+    Workers(8).              // 8 concurrent workers
+    Unordered().             // Don't preserve order (faster)
+    Map(expensiveFunc).
+    Slice()
+
+// Parallel with type change
+results := polyfill.From(urls).
+    Parallel().
+    ParallelMapTo(fetchData).
+    Slice()
+```
+
+</details>
+
+### 🔧 Utility Methods
+
+<details>
+<summary><b>Take, Skip, At, Chunk, and more</b></summary>
+
+```go
+// Take first N
+first3 := polyfill.From(numbers).Take(3).Slice()
+
+// Skip first N
+rest := polyfill.From(numbers).Skip(2).Slice()
+
+// Access with negative indices (Python-style)
+last, ok := polyfill.From(numbers).At(-1)
+first, ok := seq.At(0)
+
+// Chunk into groups
+chunks := polyfill.From([]int{1, 2, 3, 4, 5}).Chunk(2)
+// [[1 2] [3 4] [5]]
+
+// Check emptiness
+if seq.IsEmpty() { }
+
+// Get length
+length := seq.Len()
+```
+
+</details>
+
+## 💡 Examples
+
+### Data Pipeline
+
+```go
+type Product struct {
+    Name  string
+    Price float64
+    Stock int
+}
+
+// Complex transformation pipeline
+expensive := polyfill.MapTo(
+    polyfill.From(products).
+        Filter(func(p Product) bool { return p.Stock > 0 }).
+        Sort(func(a, b Product) bool { return a.Price > b.Price }).
+        Take(5),
+    func(p Product) string { return p.Name },
+).Slice()
+```
+
+### Error Handling
+
+```go
+// Parse strings to integers with error propagation
+numbers, err := polyfill.MapToE(
+    polyfill.From([]string{"1", "2", "invalid", "4"}),
+    strconv.Atoi,
+).SliceE()
+
+if err != nil {
+    log.Fatal(err) // Catches parse error
+}
+```
+
+### Grouping Data
+
+```go
+type Order struct {
+    Customer string
+    Amount   float64
+}
+
+// Group orders by customer
+byCustomer := polyfill.GroupBy(
+    polyfill.From(orders),
+    func(o Order) string { return o.Customer },
+)
+
+// Calculate totals per customer
+for customer, orders := range byCustomer {
+    total := polyfill.Reduce(
+        polyfill.From(orders),
+        0.0,
+        func(sum float64, o Order) float64 { return sum + o.Amount },
+    )
+    fmt.Printf("%s: $%.2f\n", customer, total)
+}
+```
+
+### Parallel Processing
+
+```go
+// Process large dataset concurrently
+results := polyfill.From(imageURLs).
+    Parallel().
+    Workers(runtime.NumCPU()).
+    ParallelMapTo(downloadAndProcess).
+    Slice()
+```
+
+## 🎨 Design Philosophy
+
+### Method vs Function Pattern
+
+Go doesn't allow methods with additional type parameters. Our solution:
+
+```go
+// ✅ Same type (T → T) - use METHOD
+seq.Map(func(n int) int { return n * 2 })
+
+// ✅ Type change (T → R) - use FUNCTION
+polyfill.MapTo(seq, func(n int) string { return fmt.Sprint(n) })
+```
+
+This maintains clean, readable code while respecting Go's constraints.
+
+### Immutability
+
+Operations like `Sort()` and `Reverse()` return new sequences without modifying originals:
+
+```go
+original := polyfill.From([]int{3, 1, 2})
+sorted := original.Sort(less)
+
+// original: [3 1 2] ✅ unchanged
+// sorted:   [1 2 3] ✅ new sequence
+```
+
+## 🎯 Key Methods at a Glance
+
+| Category | Methods |
+|----------|---------|
+| **Creation** | `From()`, `Slice()`, `SliceE()` |
+| **Filtering** | `Filter()`, `Find()`, `FindIndex()`, `Some()`, `Every()` |
+| **Transform** | `Map()`, `MapTo()`, `FlatMap()`, `Flatten()` |
+| **Reduce** | `Reduce()`, `ReduceE()`, `ReduceRight()` |
+| **Grouping** | `GroupBy()`, `Partition()`, `Unique()`, `UniqueBy()` |
+| **Sorting** | `Sort()`, `Reverse()` |
+| **Slicing** | `Take()`, `Skip()`, `At()`, `Chunk()` |
+| **Parallel** | `Parallel()`, `Workers()`, `Unordered()` |
+| **Utility** | `IsEmpty()`, `Len()`, `IndexOf()` |
+
+## 📊 Performance
+
+- ✅ **Zero reflection** - pure generics
+- ✅ **Inline-friendly** - compiler optimizations
+- ✅ **Memory efficient** - minimal allocations
+- ✅ **Parallel ready** - leverage all cores
+
+Benchmarks show performance comparable to hand-written loops with much better readability.
+
+## 🎓 Advanced Features
+
+### Cache (Bonus)
+
+Thread-safe in-memory cache with TTL:
+
+```go
+cache := polyfill.NewCache[string, User](polyfill.Config{
+    DefaultTTL: 5 * time.Minute,
+    MaxItems:   1000,
+})
+
+cache.Set("user:123", user, 0)
+if user, ok := cache.Get("user:123"); ok {
+    // Use cached user
 }
 ```
 
 ## 🤝 Contributing
 
-- Fork the [project](https://github.com/lofidv/polyfill)
-- Fix [open issues](https://github.com/lofidv/polyfill/issues) or request new features
+Contributions are welcome! Feel free to:
 
-Don't hesitate ;)
+- 🐛 Report bugs
+- 💡 Suggest features  
+- 🔧 Submit pull requests
+- ⭐ Star the project
 
-## 👤 Authors
+Visit [github.com/lofidv/polyfill](https://github.com/lofidv/polyfill)
 
-- jpastorm
+## 📄 License
 
-## 🌛 Show your support
+MIT License - see [LICENCE](./LICENCE) for details
 
-Give a ⭐️ if this project helped you!
+---
 
-<p><a href="https://ko-fi.com/lofidev"> <img align="left" src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" height="50" width="210" alt="lofidev" /></a></p><br><br>
+<div align="center">
 
-## 📝 License
+**Made with ❤️ by [jpastorm](https://github.com/lofidv)**
 
-Copyright © 2025 [jpastorm](https://github.com/lofidv).
+If this project helped you, consider [buying me a coffee](https://ko-fi.com/lofidev) ☕
 
-This project is [MIT](./LICENSE) licensed.
+⭐ **Star us on GitHub** — it motivates us a lot!
+
+</div>
