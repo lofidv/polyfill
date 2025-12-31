@@ -4,8 +4,7 @@ package polyfill
 //
 // Example:
 //
-//	hasAdults := polyfill.From(people).
-//	    Some(func(p Person) bool { return p.Age >= 18 })
+//	From([]int{1, 2, 3}).Some(func(n int) bool { return n > 2 }) // true
 func (s *Seq[T]) Some(f func(T) bool) bool {
 	for _, v := range s.elements {
 		if f(v) {

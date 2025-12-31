@@ -4,9 +4,7 @@ package polyfill
 //
 // Example:
 //
-//	adults := polyfill.From(people).
-//	    Filter(func(p Person) bool { return p.Age >= 18 }).
-//	    Slice()
+//	From([]int{1, 2, 3, 4}).Filter(func(n int) bool { return n > 2 }).Slice() // [3, 4]
 func (s *Seq[T]) Filter(f func(T) bool) *Seq[T] {
 	if s.err != nil {
 		return s

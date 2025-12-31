@@ -4,8 +4,7 @@ package polyfill
 //
 // Example:
 //
-//	allAdults := polyfill.From(people).
-//	    Every(func(p Person) bool { return p.Age >= 18 })
+//	From([]int{2, 4, 6}).Every(func(n int) bool { return n%2 == 0 }) // true
 func (s *Seq[T]) Every(f func(T) bool) bool {
 	for _, v := range s.elements {
 		if !f(v) {

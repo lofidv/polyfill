@@ -11,7 +11,7 @@ import (
 func TestReduce(t *testing.T) {
 	t.Run("sum numbers", func(t *testing.T) {
 		nums := []int{1, 2, 3, 4}
-		sum := polyfill.Reduce(polyfill.From(nums), 0, func(acc int, n int) int {
+		sum := polyfill.From(nums).Reduce(0, func(acc int, n int) int {
 			return acc + n
 		})
 
@@ -20,7 +20,7 @@ func TestReduce(t *testing.T) {
 
 	t.Run("concatenate strings", func(t *testing.T) {
 		words := []string{"hello", " ", "world"}
-		concat := polyfill.Reduce(polyfill.From(words), "", func(acc string, s string) string {
+		concat := polyfill.From(words).Reduce("", func(acc string, s string) string {
 			return acc + s
 		})
 
@@ -29,7 +29,7 @@ func TestReduce(t *testing.T) {
 
 	t.Run("empty slice returns initial", func(t *testing.T) {
 		empty := []float64{}
-		result := polyfill.Reduce(polyfill.From(empty), 100.0, func(acc float64, f float64) float64 {
+		result := polyfill.From(empty).Reduce(100.0, func(acc float64, f float64) float64 {
 			return acc + f
 		})
 
@@ -40,7 +40,7 @@ func TestReduce(t *testing.T) {
 func TestReduceRight(t *testing.T) {
 	t.Run("reverse concatenation", func(t *testing.T) {
 		words := []string{"a", "b", "c"}
-		result := polyfill.ReduceRight(polyfill.From(words), "", func(acc string, s string) string {
+		result := polyfill.From(words).ReduceRight("", func(acc string, s string) string {
 			return acc + s
 		})
 

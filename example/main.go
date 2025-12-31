@@ -2,190 +2,203 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-	"time"
+	"strings"
 
-	"github.com/lofidv/polyfill"
+	"github.com/lofidv/polyfill/v2"
 )
 
+// Example data structures
 type Person struct {
 	Name string
 	Age  int
+	City string
 }
 
-func (p Person) IsAdult() bool {
-	return p.Age >= 18
-}
-
-type Pet struct {
-	Name string
-	Age  int
-	Type string
+type Product struct {
+	Name  string
+	Price float64
+	Stock int
 }
 
 func main() {
-	// 1. Basic Filter and Map operations
-	people := []Person{
-		{"Alice", 25},
-		{"Bob", 17},
-		{"Charlie", 19},
-		{"David", 16},
-	}
+	printHeader("🚀 Polyfill - Functional Programming for Go")
 
-	// Filter adults and map to names - demonstrating chainable API
-	adultNames := polyfill.MapTo(
-		polyfill.From(people).Filter(func(p Person) bool { return p.IsAdult() }),
-		func(p Person) string { return p.Name },
-	).Slice()
+	// Example 1: Basic transformations
+	example1()
 
-	fmt.Println("Adult names:", adultNames) // ["Alice", "Charlie"]
+	// Example 2: Advanced filtering and mapping
+	example2()
 
-	// 2. Parallel Map demonstration
-	numbers := polyfill.From([]int{1, 2, 3, 4, 5})
-	squared := numbers.Parallel().Map(func(n int) int { return n * n }).Slice()
+	// Example 3: Aggregations
+	example3()
 
-	fmt.Println("Squared numbers:", squared) // [1, 4, 9, 16, 25]
+	// Example 4: Working with structs
+	example4()
 
-	// 3. Reduce example with type safety
-	sum := polyfill.Reduce(numbers, 0, func(acc int, n int) int { return acc + n })
+	// Example 5: Go 1.23 new features
+	example5()
 
-	fmt.Println("Sum of numbers:", sum) // 15
+	fmt.Println("\n✨ Explore more at github.com/lofidv/polyfill")
+}
 
-	// 4. Find and FindIndex
-	bob, found := polyfill.From(people).
-		Find(func(p Person) bool { return p.Name == "Bob" })
+func example1() {
+	printSection("1. Basic Transformations")
 
-	fmt.Printf("Found Bob: %v (%v)\n", bob, found) // {Bob 17} true
+	numbers := []int{1, 2, 3, 4, 5}
 
-	bobIndex := polyfill.From(people).
-		FindIndex(func(p Person) bool { return p.Name == "Bob" })
+	// Map: Transform each element
+	doubled := polyfill.From(numbers).
+		Map(func(n int) int { return n * 2 }).
+		Slice()
+	fmt.Printf("   Doubled: %v\n", doubled)
 
-	fmt.Println("Bob's index:", bobIndex) // 1
+	// Filter: Keep only matching elements
+	evens := polyfill.From(numbers).
+		Filter(func(n int) bool { return n%2 == 0 }).
+		Slice()
+	fmt.Printf("   Evens: %v\n", evens)
 
-	// 5. Some and Every
-	hasAdults := polyfill.From(people).
-		Some(func(p Person) bool { return p.IsAdult() })
+	// Reverse: Flip the order
+	reversed := polyfill.From(numbers).Reverse().Slice()
+	fmt.Printf("   Reversed: %v\n", reversed)
 
-	allAdults := polyfill.From(people).
-		Every(func(p Person) bool { return p.IsAdult() })
+	fmt.Println()
+}
 
-	fmt.Printf("Has adults: %v, All adults: %v\n", hasAdults, allAdults) // true, false
+func example2() {
+	printSection("2. Advanced Filtering & Mapping")
 
-	// 6. Chunk and Reverse
-	chunks := numbers.Chunk(2)
-	fmt.Println("Chunks:")
-	for _, chunk := range chunks {
-		fmt.Println(chunk)
-	}
-	// [1 2]
-	// [3 4]
-	// [5]
+	words := []string{"hello", "world", "go", "programming", "is", "awesome"}
 
-	reversed := numbers.Reverse().Slice()
-	fmt.Println("Reversed numbers:", reversed) // [5, 4, 3, 2, 1]
-
-	// 7. Sort
-	unsorted := []int{3, 1, 4, 2}
-	sorted := polyfill.From(unsorted).
-		Sort(func(a, b int) bool { return a < b }).
+	// Chain operations
+	longWords := polyfill.From(words).
+		Filter(func(w string) bool { return len(w) > 3 }).
+		Map(func(w string) string { return strings.ToUpper(w) }).
+		Sort(func(a, b string) bool { return a < b }).
 		Slice()
 
-	fmt.Println("Sorted numbers:", sorted) // [1, 2, 3, 4]
+	fmt.Printf("   Long words (uppercase, sorted): %v\n", longWords)
 
-	// 8. Unique (for comparable types)
-	duplicates := []int{1, 2, 2, 3, 4, 4, 5}
-	unique := polyfill.Unique(polyfill.From(duplicates)).Slice()
+	// Unique values
+	duplicates := []int{1, 2, 2, 3, 3, 3, 4, 5, 5}
+	unique := polyfill.From(duplicates).Unique().Slice()
+	fmt.Printf("   Unique: %v\n", unique)
 
-	fmt.Println("Unique numbers:", unique) // [1, 2, 3, 4, 5]
+	fmt.Println()
+}
 
-	// 9. String conversion with type safety
-	strNumbers := polyfill.From([]string{"1", "2", "3", "4"})
-	intNumbers := polyfill.MapTo(strNumbers, func(s string) int {
-		n, _ := strconv.Atoi(s)
-		return n
-	}).Slice()
+func example3() {
+	printSection("3. Aggregations & Reductions")
 
-	fmt.Println("Converted numbers:", intNumbers) // [1, 2, 3, 4]
+	numbers := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-	// 10. GroupBy - killer feature!
-	pets := []Pet{
-		{"Fido", 3, "dog"},
-		{"Whiskers", 2, "cat"},
-		{"Rover", 5, "dog"},
-		{"Mittens", 1, "cat"},
+	// Sum using Reduce
+	sum := polyfill.From(numbers).
+		Reduce(0, func(acc, n int) int { return acc + n })
+	fmt.Printf("   Sum: %d\n", sum)
+
+	// Min and Max
+	min, _ := polyfill.From(numbers).MinBy(func(a, b int) bool { return a < b })
+	max, _ := polyfill.From(numbers).MaxBy(func(a, b int) bool { return a < b })
+	fmt.Printf("   Min: %d, Max: %d\n", min, max)
+
+	// Find first element matching condition
+	firstGt5, found := polyfill.From(numbers).Find(func(n int) bool { return n > 5 })
+	if found {
+		fmt.Printf("   First > 5: %d\n", firstGt5)
 	}
 
-	grouped := polyfill.GroupBy(polyfill.From(pets), func(p Pet) string {
-		return p.Type
-	})
+	// Check conditions
+	hasEven := polyfill.From(numbers).Some(func(n int) bool { return n%2 == 0 })
+	allPositive := polyfill.From(numbers).Every(func(n int) bool { return n > 0 })
+	fmt.Printf("   Has even: %v, All positive: %v\n", hasEven, allPositive)
 
-	fmt.Println("Pets grouped by type:")
-	for typ, pets := range grouped {
-		fmt.Printf("%s: %v\n", typ, pets)
-	}
-	// dog: [{Fido 3 dog} {Rover 5 dog}]
-	// cat: [{Whiskers 2 cat} {Mittens 1 cat}]
+	fmt.Println()
+}
 
-	// 11. New utility methods
-	fmt.Println("\n--- New Utility Methods ---")
+func example4() {
+	printSection("4. Working with Structs")
 
-	// Take and Skip
-	first3 := numbers.Take(3).Slice()
-	fmt.Println("First 3 numbers:", first3) // [1, 2, 3]
-
-	skip2 := numbers.Skip(2).Slice()
-	fmt.Println("Skip 2 numbers:", skip2) // [3, 4, 5]
-
-	// At method with negative indices
-	if val, ok := numbers.At(2); ok {
-		fmt.Printf("Element at index 2: %d\n", val) // 3
+	people := []Person{
+		{"Alice", 28, "NYC"},
+		{"Bob", 35, "SF"},
+		{"Charlie", 22, "NYC"},
+		{"Diana", 31, "LA"},
+		{"Eve", 25, "NYC"},
 	}
 
-	if first, ok := numbers.At(0); ok {
-		fmt.Printf("First element: %d\n", first) // 1
+	// Filter and sort
+	nycAdults := polyfill.From(people).
+		Filter(func(p Person) bool { return p.City == "NYC" && p.Age >= 25 }).
+		Sort(func(a, b Person) bool { return a.Age < b.Age }).
+		Slice()
+
+	fmt.Println("   NYC adults (sorted by age):")
+	for _, p := range nycAdults {
+		fmt.Printf("     - %s (%d)\n", p.Name, p.Age)
 	}
 
-	if last, ok := numbers.At(-1); ok {
-		fmt.Printf("Last element: %d\n", last) // 5
-	}
+	// Extract names using MapTo
+	names := polyfill.MapTo(
+		polyfill.From(people),
+		func(p Person) string { return p.Name },
+	).Slice()
+	fmt.Printf("   All names: %v\n", names)
 
-	// FlatMap
-	words := []string{"hello world", "foo bar"}
-	allWords := polyfill.FlatMap(polyfill.From(words), func(s string) []string {
-		var parts []string
-		current := ""
-		for _, ch := range s {
-			if ch == ' ' {
-				if current != "" {
-					parts = append(parts, current)
-					current = ""
-				}
-			} else {
-				current += string(ch)
-			}
-		}
-		if current != "" {
-			parts = append(parts, current)
-		}
-		return parts
-	}).Slice()
-	fmt.Println("FlatMap result:", allWords) // [hello world foo bar]
+	// Group by city
+	byCity := polyfill.From(people).GroupBy(func(p Person) any { return p.City })
+	fmt.Printf("   Grouped by city: %d cities\n", len(byCity))
 
-	// 12. Cache example
-	c := polyfill.NewCache[string, int](polyfill.Config{
-		DefaultTTL: 5 * time.Minute,
-		MaxItems:   1000,
-		OnEvict: func(k, v any, r polyfill.EvictReason) {
-			// log.Printf("evicted %v (%v): %v", k, r, v)
-		},
-	})
+	// Average age
+	totalAge := polyfill.ReduceTo(
+		polyfill.From(people),
+		0,
+		func(acc int, p Person) int { return acc + p.Age },
+	)
+	avgAge := float64(totalAge) / float64(len(people))
+	fmt.Printf("   Average age: %.1f\n", avgAge)
 
-	_ = c.Add("x", 1, -1)         // -1 => no expiration
-	c.Set("y", 2, 10*time.Second) // item TTL
-	v, ok := c.Get("x")           // 1, true
-	_ = c.Update("x", func(p *int) error { *p += 41; return nil })
-	val, _ := c.GetOrSet("z", func() (int, time.Duration, error) { return 3, 0, nil })
-	_ = val
-	_ = ok
-	_ = v
+	fmt.Println()
+}
+
+func example5() {
+	printSection("5. Go 1.23 Features")
+
+	numbers := []int{5, 2, 8, 1, 9, 3}
+
+	// Concat - combine slices
+	combined := polyfill.From(numbers).
+		Concat([]int{10, 11, 12}).
+		Slice()
+	fmt.Printf("   Concatenated: %v\n", combined)
+
+	// Prepend - add to beginning
+	withZero := polyfill.From(numbers).Prepend(0).Slice()
+	fmt.Printf("   With zero prepended: %v\n", withZero)
+
+	// Clone - efficient copy
+	original := polyfill.From(numbers)
+	clone := original.Clone()
+	fmt.Printf("   Original: %v\n", original.Slice())
+	fmt.Printf("   Clone: %v\n", clone.Slice())
+
+	// Chunk - split into groups
+	chunks := polyfill.From(numbers).Chunk(3)
+	fmt.Printf("   Chunks of 3: %v\n", chunks)
+
+	// ContainsFunc - flexible search
+	hasLarge := polyfill.From(numbers).ContainsFunc(func(n int) bool { return n > 7 })
+	fmt.Printf("   Has number > 7: %v\n", hasLarge)
+
+	fmt.Println()
+}
+
+// Helper functions for pretty printing
+func printHeader(title string) {
+	border := strings.Repeat("=", len(title)+4)
+	fmt.Printf("\n%s\n  %s\n%s\n\n", border, title, border)
+}
+
+func printSection(title string) {
+	fmt.Printf("📌 %s\n", title)
 }

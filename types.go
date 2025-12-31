@@ -8,11 +8,10 @@ type Seq[T any] struct {
 }
 
 // From creates a new Seq from an existing slice
-// This is the primary way to start a chain of operations
 //
 // Example:
 //
-//	polyfill.From([]int{1, 2, 3}).Map(fn).Slice()
+//	From([]int{1, 2, 3}).Filter(func(n int) bool { return n > 1 }).Slice()
 func From[T any](items []T) *Seq[T] {
 	return &Seq[T]{elements: items}
 }
@@ -21,7 +20,7 @@ func From[T any](items []T) *Seq[T] {
 //
 // Example:
 //
-//	polyfill.New(1, 2, 3, 4, 5).Filter(fn).Slice()
+//	New(1, 2, 3).Map(func(n int) int { return n * 2 }).Slice()
 func New[T any](items ...T) *Seq[T] {
 	return From(items)
 }
@@ -135,4 +134,43 @@ func (s *Seq[T]) ForEachIndexed(f func(int, T)) {
 	for i, v := range s.elements {
 		f(i, v)
 	}
+}
+
+// Min returns the minimum element
+// MinBy returns the minimum element using a comparison function
+//
+// Example:
+//
+//	From([]int{3, 1, 2}).MinBy(func(a, b int) bool { return a < b }) // 1
+func (s *Seq[T]) MinBy(less func(a, b T) bool) (T, bool) {
+	if len(s.elements) == 0 {
+		var zero T
+		return zero, false
+	}
+	minVal := s.elements[0]
+	for i := 1; i < len(s.elements); i++ {
+		if less(s.elements[i], minVal) {
+			minVal = s.elements[i]
+		}
+	}
+	return minVal, true
+}
+
+// MaxBy returns the maximum element using a comparison function
+//
+// Example:
+//
+//	From([]int{3, 1, 2}).MaxBy(func(a, b int) bool { return a < b }) // 3
+func (s *Seq[T]) MaxBy(less func(a, b T) bool) (T, bool) {
+	if len(s.elements) == 0 {
+		var zero T
+		return zero, false
+	}
+	maxVal := s.elements[0]
+	for i := 1; i < len(s.elements); i++ {
+		if less(maxVal, s.elements[i]) {
+			maxVal = s.elements[i]
+		}
+	}
+	return maxVal, true
 }

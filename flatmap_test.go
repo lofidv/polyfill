@@ -4,7 +4,7 @@ import "testing"
 
 func TestFlatMap(t *testing.T) {
 	words := []string{"hello world", "foo bar"}
-	result := FlatMap(From(words), func(s string) []string {
+	result := From(words).FlatMap(func(s string) []string {
 		// Simple split simulation
 		var parts []string
 		current := ""

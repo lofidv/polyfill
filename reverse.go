@@ -1,20 +1,18 @@
 package polyfill
 
+import "slices"
+
 // Reverse returns a reversed copy of the sequence (immutable)
-// Does NOT mutate the original sequence
 //
 // Example:
 //
-//	reversed := polyfill.From([]int{1, 2, 3}).Reverse().Slice()
-//	// Result: [3, 2, 1]
+//	From([]int{1, 2, 3}).Reverse().Slice() // [3, 2, 1]
 func (s *Seq[T]) Reverse() *Seq[T] {
 	if s.err != nil {
 		return s
 	}
 
-	result := make([]T, len(s.elements))
-	for i := 0; i < len(s.elements); i++ {
-		result[len(s.elements)-1-i] = s.elements[i]
-	}
+	result := slices.Clone(s.elements)
+	slices.Reverse(result)
 	return From(result)
 }

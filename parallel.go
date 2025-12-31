@@ -20,10 +20,7 @@ type ParallelSeq[T any] struct {
 //
 // Example:
 //
-//	squared := polyfill.From(numbers).
-//	    Parallel().
-//	    Map(func(n int) int { return n * n }).
-//	    Slice()
+//	From([]int{1, 2, 3}).Parallel().Map(func(n int) int { return n * n }).Slice()
 func (s *Seq[T]) Parallel(opts ...ParallelOptions) *ParallelSeq[T] {
 	opt := ParallelOptions{Workers: len(s.elements), Ordered: true}
 	if len(opts) > 0 {

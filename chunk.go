@@ -1,12 +1,10 @@
 package polyfill
 
 // Chunk splits the sequence into chunks of specified size
-// Returns a slice of slices (not wrapped Seqs for simplicity)
 //
 // Example:
 //
-//	chunks := polyfill.From([]int{1, 2, 3, 4, 5}).Chunk(2)
-//	// Result: [][]int{{1, 2}, {3, 4}, {5}}
+//	From([]int{1, 2, 3, 4, 5}).Chunk(2) // [][]int{{1, 2}, {3, 4}, {5}}
 func (s *Seq[T]) Chunk(size int) [][]T {
 	if size <= 0 {
 		return [][]T{s.elements}
