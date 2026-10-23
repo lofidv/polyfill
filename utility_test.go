@@ -3,7 +3,7 @@ package polyfill_test
 import (
 	"testing"
 
-	"github.com/lofidv/polyfill"
+	"github.com/lofidv/polyfill/v2"
 
 	"github.com/stretchr/testify/assert"
 )

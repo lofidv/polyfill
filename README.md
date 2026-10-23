@@ -1,7 +1,7 @@
 # 🚀 Polyfill
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![Go Reference](https://pkg.go.dev/badge/github.com/lofidv/polyfill.svg)](https://pkg.go.dev/github.com/lofidv/polyfill)
+[![Go Reference](https://pkg.go.dev/badge/github.com/lofidv/polyfill/v2.svg)](https://pkg.go.dev/github.com/lofidv/polyfill/v2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A modern, type-safe functional programming library for Go, bringing the power and elegance of JavaScript's array methods to Go slices with full generic support.
@@ -20,7 +20,7 @@ A modern, type-safe functional programming library for Go, bringing the power an
 ## 📦 Installation
 
 ```bash
-go get github.com/lofidv/polyfill
+go get github.com/lofidv/polyfill/v2
 ```
 
 ## 🎯 Quick Start
@@ -30,7 +30,7 @@ package main
 
 import (
     "fmt"
-    "github.com/lofidv/polyfill"
+    "github.com/lofidv/polyfill/v2"
 )
 
 func main() {
@@ -336,7 +336,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- [Documentation](https://pkg.go.dev/github.com/lofidv/polyfill)
+- [Documentation](https://pkg.go.dev/github.com/lofidv/polyfill/v2)
 - [Examples](./example)
 - [Go 1.23 Upgrade Guide](./GO_1.23_UPGRADE.md)
 - [Issues](https://github.com/lofidv/polyfill/issues)
