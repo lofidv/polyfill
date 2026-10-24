@@ -1,0 +1,44 @@
+# GitHub Actions workflow for this repository.
+#
+# GitHub rejects any push that creates .github/workflows/* unless the
+# token has the "workflow" scope. Until that scope is available, this
+# file lives here. To enable CI:
+#
+#   mkdir -p .github/workflows && git mv ci/github-actions.yml .github/workflows/ci.yml
+#   git commit -m 'ci: enable GitHub Actions'
+#
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Go ${{ matrix.go }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 1.23 is the declared minimum because the library uses iter.Seq.
+        go: ["1.23", "1.25", "1.27"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test with race detector
+        run: go test -race ./...
+
+      - name: Benchmarks compile and run
+        run: go test -run '^$' -bench . -benchtime=10x ./...
