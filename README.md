@@ -230,7 +230,7 @@ rows and the *intent* matters more than the last microsecond.
 
 ## Migrating from v1
 
-| v1 | v2 |
+| v1 | v3 |
 |---|---|
 | `polyfill.Wrap(x)` / `.Unwrap()` | `polyfill.From(x)` / `.Slice()` |
 | `polyfill.Map(s, f)` | `polyfill.MapTo(s, f)` |
