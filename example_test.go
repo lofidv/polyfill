@@ -3,7 +3,7 @@ package polyfill_test
 import (
 	"fmt"
 
-	"github.com/lofidv/polyfill/v2"
+	"github.com/lofidv/polyfill/v3"
 )
 
 // Filter keeps the element type, so it is a method and it chains.

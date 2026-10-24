@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/lofidv/polyfill/v2"
+	"github.com/lofidv/polyfill/v3"
 	"github.com/stretchr/testify/assert"
 )
 

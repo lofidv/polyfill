@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lofidv/polyfill/v2"
+	"github.com/lofidv/polyfill/v3"
 )
 
 var (

@@ -1,4 +1,4 @@
-module github.com/lofidv/polyfill/v2
+module github.com/lofidv/polyfill/v3
 
 go 1.23
 

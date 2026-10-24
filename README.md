@@ -1,6 +1,6 @@
-# Polyfill v2
+# Polyfill v3
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/lofidv/polyfill/v2.svg)](https://pkg.go.dev/github.com/lofidv/polyfill/v2)
+[![Go Reference](https://pkg.go.dev/badge/github.com/lofidv/polyfill/v3.svg)](https://pkg.go.dev/github.com/lofidv/polyfill/v3)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENCE)
 
@@ -18,7 +18,7 @@ revenue := polyfill.SumBy(paid, func(o Order) float64 { return o.Amount })
 ```
 
 ```sh
-go get github.com/lofidv/polyfill/v2
+go get github.com/lofidv/polyfill/v3
 ```
 
 Requires Go 1.23 or later. No third-party dependencies.
@@ -110,7 +110,7 @@ for i, page := range polyfill.From(orders).Chunk(20) { /* batch or paginate */ }
 
 ### 3. Serve a hot lookup through the cache
 
-The companion package `polyfill/v2/cache` collapses concurrent misses:
+The companion package `polyfill/v3/cache` collapses concurrent misses:
 
 ```go
 c := cache.NewCache[string, Product](cache.Config{
@@ -143,7 +143,7 @@ In the demo, **200 concurrent requests produce 1 repository query**.
 **Aggregate and index:** `Reduce`, `ReduceE`, `ReduceRight`, `ReduceTo`,
 `ReduceToE`, `SumBy`, `AvgBy`, `GroupBy`, `CountBy`, `KeyBy`, `ToMap`.
 
-**Cache (`polyfill/v2/cache`):** `NewCache`, `Get`, `Peek`, `Set`, `Add`,
+**Cache (`polyfill/v3/cache`):** `NewCache`, `Get`, `Peek`, `Set`, `Add`,
 `GetOrSet`, `Update`, `Touch`, `Delete`, `Has`, `TTL`, `Len`, `Keys`, `Sweep`,
 `Clear`.
 

@@ -19,8 +19,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lofidv/polyfill/v2"
-	"github.com/lofidv/polyfill/v2/cache"
+	"github.com/lofidv/polyfill/v3"
+	"github.com/lofidv/polyfill/v3/cache"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lofidv/polyfill/v2/cache"
+	"github.com/lofidv/polyfill/v3/cache"
 )
 
 // Precomputed keys keep fmt.Sprintf out of the measurement.

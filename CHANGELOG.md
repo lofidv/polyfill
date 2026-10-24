@@ -3,7 +3,9 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
-## [2.0.0]
+## [3.0.0]
+
+First release on the v3 module path. The v2 line stays available at `v2.5.0`.
 
 The library was rewritten around one idea: a slice pipeline that carries its own
 error, so a failing step stops the chain and keeps the work already done.
@@ -50,9 +52,9 @@ error, so a failing step stops the chain and keeps the work already done.
 
 ### Changed (breaking)
 
-- Module path is `github.com/lofidv/polyfill/v2` and the minimum Go version is
+- Module path is `github.com/lofidv/polyfill/v3` and the minimum Go version is
   1.23.
-- The cache moved to the `polyfill/v2/cache` subpackage. `NewCache` takes a
+- The cache moved to the `polyfill/v3/cache` subpackage. `NewCache` takes a
   `cache.Config`, and `GetOrSet` takes a `context.Context` and runs the supplier
   outside the cache lock.
 - `GroupBy`, `UniqueBy`, `SortBy`, `KeyBy`, `ToMap`, `SumBy` and `AvgBy` are
