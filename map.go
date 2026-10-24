@@ -1,72 +1,78 @@
 package polyfill
 
-// === TRANSFORMATION METHODS ===
-
-// Map transforms each element (same type T -> T)
+// Map transforms each element, keeping the element type.
 //
-// Example:
-//
-//	From([]int{1, 2, 3}).Map(func(n int) int { return n * 2 }).Slice() // [2, 4, 6]
+//	From([]int{1, 2, 3}).Map(func(n int) int { return n * 2 }).Slice() // [2 4 6]
 func (s *Seq[T]) Map(f func(T) T) *Seq[T] {
-	if s.err != nil {
+	if s == nil || s.err != nil {
 		return s
 	}
-
-	result := make([]T, 0, len(s.elements))
-	for _, v := range s.elements {
-		result = append(result, f(v))
+	result := make([]T, len(s.elements))
+	for i, v := range s.elements {
+		result[i] = f(v)
 	}
 	return From(result)
 }
 
-// MapE transforms elements with error handling (same type)
+// MapE transforms each element and stops at the first error.
+//
+// The elements transformed before the failure are kept, so SliceE returns a
+// partial result together with the error. This is the method to use when a
+// pipeline parses or validates external data.
+//
+//	rows, err := From(raw).MapE(parseRow).SliceE()
 func (s *Seq[T]) MapE(f func(T) (T, error)) *Seq[T] {
-	if s.err != nil {
+	if s == nil || s.err != nil {
 		return s
 	}
-
 	result := make([]T, 0, len(s.elements))
 	for _, v := range s.elements {
 		val, err := f(v)
 		if err != nil {
-			return &Seq[T]{err: err}
+			return &Seq[T]{elements: result, err: err}
 		}
 		result = append(result, val)
 	}
 	return From(result)
 }
 
-// MapTo transforms elements with type change (T -> R)
-// Must remain a global function due to Go generic method limitations
+// MapTo transforms elements into another type.
 //
-// Example:
+// MapTo is a free function because Go 1.18 to 1.26 do not allow a method to
+// declare a type parameter of its own.
 //
-//	MapTo(From([]int{1, 2}), func(n int) string { return fmt.Sprint(n) }).Slice() // ["1", "2"]
+//	MapTo(From([]int{1, 2}), strconv.Itoa).Slice() // ["1" "2"]
 func MapTo[T any, R any](s *Seq[T], f func(T) R) *Seq[R] {
-	if s.err != nil {
-		return &Seq[R]{err: s.err}
+	if s == nil || s.err != nil {
+		return &Seq[R]{err: errOf(s)}
 	}
-
-	result := make([]R, 0, len(s.elements))
-	for _, v := range s.elements {
-		result = append(result, f(v))
+	result := make([]R, len(s.elements))
+	for i, v := range s.elements {
+		result[i] = f(v)
 	}
 	return From(result)
 }
 
-// MapToE transforms elements with type change and error handling
+// MapToE is MapTo with error handling. It stops at the first error and keeps
+// the elements produced so far.
 func MapToE[T any, R any](s *Seq[T], f func(T) (R, error)) *Seq[R] {
-	if s.err != nil {
-		return &Seq[R]{err: s.err}
+	if s == nil || s.err != nil {
+		return &Seq[R]{err: errOf(s)}
 	}
-
 	result := make([]R, 0, len(s.elements))
 	for _, v := range s.elements {
 		val, err := f(v)
 		if err != nil {
-			return &Seq[R]{err: err}
+			return &Seq[R]{elements: result, err: err}
 		}
 		result = append(result, val)
 	}
 	return From(result)
+}
+
+func errOf[T any](s *Seq[T]) error {
+	if s == nil {
+		return nil
+	}
+	return s.err
 }

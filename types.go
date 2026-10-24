@@ -1,150 +1,199 @@
 package polyfill
 
-// Seq represents a functional sequence wrapper around a Go slice
-// providing a chainable, fluent API for slice operations inspired by JavaScript
+// Seq is a chainable wrapper around a Go slice.
+//
+// A Seq may carry an error. See the package documentation for the error
+// contract: once the error is set, every operation is a no-op and the terminal
+// operations return zero values.
 type Seq[T any] struct {
 	elements []T
-	err      error // stores error for chainable error handling
+	err      error
 }
 
-// From creates a new Seq from an existing slice
-//
-// Example:
+// From creates a Seq from an existing slice.
+// It does not copy: the Seq shares the caller's backing array.
 //
 //	From([]int{1, 2, 3}).Filter(func(n int) bool { return n > 1 }).Slice()
 func From[T any](items []T) *Seq[T] {
 	return &Seq[T]{elements: items}
 }
 
-// New creates a new Seq from variadic arguments
-//
-// Example:
+// New creates a Seq from variadic arguments.
 //
 //	New(1, 2, 3).Map(func(n int) int { return n * 2 }).Slice()
 func New[T any](items ...T) *Seq[T] {
 	return From(items)
 }
 
-// Slice returns the underlying slice
-// This is the primary way to exit a chain of operations
+// Slice returns the underlying slice. It is the primary way to exit a chain.
+//
+// When the chain failed, Slice returns the elements processed before the
+// failure. Use SliceE when you need the error.
 func (s *Seq[T]) Slice() []T {
+	if s == nil {
+		return nil
+	}
 	return s.elements
 }
 
-// SliceE returns the underlying slice and any error that occurred during chaining
+// SliceE returns the elements processed so far and the chain error.
+//
+//	rows, err := From(raw).MapE(parse).Filter(valid).SliceE()
 func (s *Seq[T]) SliceE() ([]T, error) {
+	if s == nil {
+		return nil, nil
+	}
 	return s.elements, s.err
 }
 
-// Err returns any error that occurred during the chain
+// Err returns the error that stopped the chain, or nil.
 func (s *Seq[T]) Err() error {
+	if s == nil {
+		return nil
+	}
 	return s.err
 }
 
-// Len returns the length of the sequence
+// Len returns the number of elements. On a failed chain it returns the number
+// of elements processed before the failure.
 func (s *Seq[T]) Len() int {
+	if s == nil {
+		return 0
+	}
 	return len(s.elements)
 }
 
-// IsEmpty returns true if the sequence has no elements
+// IsEmpty reports whether the sequence has no elements.
 func (s *Seq[T]) IsEmpty() bool {
-	return len(s.elements) == 0
+	return s == nil || len(s.elements) == 0
 }
 
-// Push appends items to the sequence (mutates)
+// Push appends items to the sequence and returns the receiver.
+//
+// Push mutates, like JavaScript's Array.push. Use Append for the immutable
+// version that returns a new Seq.
 func (s *Seq[T]) Push(items ...T) *Seq[T] {
+	if s == nil {
+		return &Seq[T]{elements: items}
+	}
+	if s.err != nil {
+		return s
+	}
 	s.elements = append(s.elements, items...)
 	return s
 }
 
-// At returns the element at the given index (like JS array.at)
-// Returns zero value and false if index is out of bounds
-// Supports negative indices: -1 is last element
+// At returns the element at index, like JavaScript's Array.at.
+// A negative index counts from the end: -1 is the last element.
+// It returns false when the index is out of bounds or the chain failed.
 func (s *Seq[T]) At(index int) (T, bool) {
+	var zero T
+	if s == nil || s.err != nil {
+		return zero, false
+	}
 	if index < 0 {
-		index = len(s.elements) + index
+		index += len(s.elements)
 	}
 	if index < 0 || index >= len(s.elements) {
-		var zero T
 		return zero, false
 	}
 	return s.elements[index], true
 }
 
-// Get returns the element at the given index (alias for At with positive indices only)
+// Get returns the element at index. Negative indices are not supported; use At
+// for that. It returns false when the index is out of bounds or the chain
+// failed.
 func (s *Seq[T]) Get(index int) (T, bool) {
-	if index < 0 || index >= len(s.elements) {
-		var zero T
+	var zero T
+	if s == nil || s.err != nil || index < 0 || index >= len(s.elements) {
 		return zero, false
 	}
 	return s.elements[index], true
 }
 
-// First returns the first element
-// Returns zero value and false if sequence is empty
+// First returns the first element.
 func (s *Seq[T]) First() (T, bool) {
-	if len(s.elements) == 0 {
-		var zero T
+	var zero T
+	if s == nil || s.err != nil || len(s.elements) == 0 {
 		return zero, false
 	}
 	return s.elements[0], true
 }
 
-// Last returns the last element
-// Returns zero value and false if sequence is empty
+// Last returns the last element.
 func (s *Seq[T]) Last() (T, bool) {
-	if len(s.elements) == 0 {
-		var zero T
+	var zero T
+	if s == nil || s.err != nil || len(s.elements) == 0 {
 		return zero, false
 	}
 	return s.elements[len(s.elements)-1], true
 }
 
-// Take returns a new Seq with the first n elements (like JS slice)
+// Take returns a new Seq with the first n elements.
+// It copies, so mutating the result cannot affect the receiver.
 func (s *Seq[T]) Take(n int) *Seq[T] {
+	if s == nil {
+		return &Seq[T]{}
+	}
+	if s.err != nil {
+		return s
+	}
 	if n <= 0 {
 		return From([]T{})
 	}
 	if n >= len(s.elements) {
-		return From(s.elements)
+		n = len(s.elements)
 	}
-	return From(s.elements[:n])
+	out := make([]T, n)
+	copy(out, s.elements[:n])
+	return From(out)
 }
 
-// Skip returns a new Seq with the first n elements removed
+// Skip returns a new Seq without the first n elements.
+// It copies, so mutating the result cannot affect the receiver.
 func (s *Seq[T]) Skip(n int) *Seq[T] {
+	if s == nil {
+		return &Seq[T]{}
+	}
+	if s.err != nil {
+		return s
+	}
 	if n <= 0 {
-		return From(s.elements)
+		n = 0
 	}
 	if n >= len(s.elements) {
 		return From([]T{})
 	}
-	return From(s.elements[n:])
+	out := make([]T, len(s.elements)-n)
+	copy(out, s.elements[n:])
+	return From(out)
 }
 
-// ForEach executes a function for each element (like JS forEach)
+// ForEach calls f for every element.
 func (s *Seq[T]) ForEach(f func(T)) {
+	if s == nil || s.err != nil {
+		return
+	}
 	for _, v := range s.elements {
 		f(v)
 	}
 }
 
-// ForEachIndexed executes a function for each element with its index
+// ForEachIndexed calls f with the index and the element.
 func (s *Seq[T]) ForEachIndexed(f func(int, T)) {
+	if s == nil || s.err != nil {
+		return
+	}
 	for i, v := range s.elements {
 		f(i, v)
 	}
 }
 
-// Min returns the minimum element
-// MinBy returns the minimum element using a comparison function
-//
-// Example:
-//
-//	From([]int{3, 1, 2}).MinBy(func(a, b int) bool { return a < b }) // 1
+// MinBy returns the minimum element according to less.
+// It returns false when the sequence is empty or the chain failed.
 func (s *Seq[T]) MinBy(less func(a, b T) bool) (T, bool) {
-	if len(s.elements) == 0 {
-		var zero T
+	var zero T
+	if s == nil || s.err != nil || len(s.elements) == 0 {
 		return zero, false
 	}
 	minVal := s.elements[0]
@@ -156,14 +205,11 @@ func (s *Seq[T]) MinBy(less func(a, b T) bool) (T, bool) {
 	return minVal, true
 }
 
-// MaxBy returns the maximum element using a comparison function
-//
-// Example:
-//
-//	From([]int{3, 1, 2}).MaxBy(func(a, b int) bool { return a < b }) // 3
+// MaxBy returns the maximum element according to less.
+// It returns false when the sequence is empty or the chain failed.
 func (s *Seq[T]) MaxBy(less func(a, b T) bool) (T, bool) {
-	if len(s.elements) == 0 {
-		var zero T
+	var zero T
+	if s == nil || s.err != nil || len(s.elements) == 0 {
 		return zero, false
 	}
 	maxVal := s.elements[0]

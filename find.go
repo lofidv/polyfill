@@ -1,17 +1,18 @@
 package polyfill
 
-// Find returns the first element matching the predicate (like JS array.find)
-// Returns zero value and false if not found
+// Find returns the first element that satisfies predicate.
+// It returns false when nothing matches or the chain failed.
 //
-// Example:
-//
-//	val, ok := From([]int{1, 2, 3}).Find(func(n int) bool { return n > 1 }) // 2, true
-func (s *Seq[T]) Find(f func(T) bool) (T, bool) {
+//	if user, ok := From(users).Find(isAdmin); ok { ... }
+func (s *Seq[T]) Find(predicate func(T) bool) (T, bool) {
+	var zero T
+	if s == nil || s.err != nil {
+		return zero, false
+	}
 	for _, v := range s.elements {
-		if f(v) {
+		if predicate(v) {
 			return v, true
 		}
 	}
-	var zero T
 	return zero, false
 }

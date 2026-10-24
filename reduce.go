@@ -1,11 +1,12 @@
 package polyfill
 
-// Reduce reduces the sequence to a single value (like JS array.reduce)
+// Reduce folds the sequence into a single value of the same type.
 //
-// Example:
-//
-//	From([]int{1, 2, 3}).Reduce(0, func(a, n int) int { return a + n }) // 6
-func (s *Seq[T]) Reduce(initial T, f func(acc T, val T) T) T {
+//	From([]int{1, 2, 3}).Reduce(0, func(acc, n int) int { return acc + n }) // 6
+func (s *Seq[T]) Reduce(initial T, f func(acc, val T) T) T {
+	if s == nil || s.err != nil {
+		return initial
+	}
 	acc := initial
 	for _, v := range s.elements {
 		acc = f(acc, v)
@@ -13,12 +14,15 @@ func (s *Seq[T]) Reduce(initial T, f func(acc T, val T) T) T {
 	return acc
 }
 
-// ReduceTo reduces the sequence to a single value of a different type
+// ReduceTo folds the sequence into a value of a different type.
 //
-// Example:
-//
-//	ReduceTo(From([]int{1, 2}), "", func(a string, n int) string { return a + fmt.Sprint(n) }) // "12"
+//	ReduceTo(From([]int{1, 2}), "", func(acc string, n int) string {
+//		return acc + strconv.Itoa(n)
+//	}) // "12"
 func ReduceTo[T any, R any](s *Seq[T], initial R, f func(acc R, val T) R) R {
+	if s == nil || s.err != nil {
+		return initial
+	}
 	acc := initial
 	for _, v := range s.elements {
 		acc = f(acc, v)
@@ -26,12 +30,14 @@ func ReduceTo[T any, R any](s *Seq[T], initial R, f func(acc R, val T) R) R {
 	return acc
 }
 
-// ReduceE reduces with error handling (same type)
-func (s *Seq[T]) ReduceE(initial T, f func(acc T, val T) (T, error)) (T, error) {
+// ReduceE folds with error handling and stops at the first error.
+func (s *Seq[T]) ReduceE(initial T, f func(acc, val T) (T, error)) (T, error) {
+	if s == nil {
+		return initial, nil
+	}
 	if s.err != nil {
 		return initial, s.err
 	}
-
 	acc := initial
 	for _, v := range s.elements {
 		var err error
@@ -43,12 +49,15 @@ func (s *Seq[T]) ReduceE(initial T, f func(acc T, val T) (T, error)) (T, error) 
 	return acc, nil
 }
 
-// ReduceToE reduces with error handling and type change
+// ReduceToE folds into another type with error handling and stops at the first
+// error.
 func ReduceToE[T any, R any](s *Seq[T], initial R, f func(acc R, val T) (R, error)) (R, error) {
+	if s == nil {
+		return initial, nil
+	}
 	if s.err != nil {
 		return initial, s.err
 	}
-
 	acc := initial
 	for _, v := range s.elements {
 		var err error
@@ -60,8 +69,11 @@ func ReduceToE[T any, R any](s *Seq[T], initial R, f func(acc R, val T) (R, erro
 	return acc, nil
 }
 
-// ReduceRight reduces the sequence from right to left
-func (s *Seq[T]) ReduceRight(initial T, f func(acc T, val T) T) T {
+// ReduceRight folds from the last element to the first.
+func (s *Seq[T]) ReduceRight(initial T, f func(acc, val T) T) T {
+	if s == nil || s.err != nil {
+		return initial
+	}
 	acc := initial
 	for i := len(s.elements) - 1; i >= 0; i-- {
 		acc = f(acc, s.elements[i])
@@ -69,8 +81,11 @@ func (s *Seq[T]) ReduceRight(initial T, f func(acc T, val T) T) T {
 	return acc
 }
 
-// ReduceRightTo reduces from right to left with type change
+// ReduceRightTo folds from the last element to the first into another type.
 func ReduceRightTo[T any, R any](s *Seq[T], initial R, f func(acc R, val T) R) R {
+	if s == nil || s.err != nil {
+		return initial
+	}
 	acc := initial
 	for i := len(s.elements) - 1; i >= 0; i-- {
 		acc = f(acc, s.elements[i])

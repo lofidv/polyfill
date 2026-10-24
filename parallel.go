@@ -1,100 +1,114 @@
 package polyfill
 
-import "sync"
+import (
+	"runtime"
+	"sync"
+)
 
-// === PARALLEL EXECUTION ===
-
-// ParallelOptions configures parallel execution
-type ParallelOptions struct {
-	Workers int  // number of goroutines (0 = number of elements)
-	Ordered bool // preserve order (default true)
-}
-
-// ParallelSeq wraps a Seq for parallel operations
+// ParallelSeq runs one operation across a bounded pool of goroutines.
+// Create it with Seq.Parallel.
 type ParallelSeq[T any] struct {
-	seq  *Seq[T]
-	opts ParallelOptions
+	seq     *Seq[T]
+	workers int
 }
 
-// Parallel returns a parallel execution context
+// Parallel starts a parallel context. The optional argument sets the number of
+// workers; it defaults to GOMAXPROCS and is capped at the number of elements.
 //
-// Example:
+// Use it only when the callback is expensive. For cheap callbacks the
+// goroutine and channel overhead costs far more than the work, and a plain Map
+// is faster. See the benchmarks in the README.
 //
-//	From([]int{1, 2, 3}).Parallel().Map(func(n int) int { return n * n }).Slice()
-func (s *Seq[T]) Parallel(opts ...ParallelOptions) *ParallelSeq[T] {
-	opt := ParallelOptions{Workers: len(s.elements), Ordered: true}
-	if len(opts) > 0 {
-		opt = opts[0]
+//	From(files).Parallel(8).Map(readAndHash).Slice()
+func (s *Seq[T]) Parallel(workers ...int) *ParallelSeq[T] {
+	n := runtime.GOMAXPROCS(0)
+	if len(workers) > 0 && workers[0] > 0 {
+		n = workers[0]
 	}
-	if opt.Workers <= 0 {
-		opt.Workers = len(s.elements)
-	}
-	return &ParallelSeq[T]{seq: s, opts: opt}
+	return &ParallelSeq[T]{seq: s, workers: n}
 }
 
-// Map transforms elements concurrently (same type)
+// Map transforms every element concurrently, keeping the order.
+// The callback must be safe for concurrent use.
+//
+// A panic inside the callback is recovered in the worker and re-raised in the
+// calling goroutine, so it cannot silently kill an unrelated goroutine.
 func (p *ParallelSeq[T]) Map(f func(T) T) *Seq[T] {
-	result := make([]T, len(p.seq.elements))
-	var wg sync.WaitGroup
-
-	workers := p.opts.Workers
-	if workers > len(p.seq.elements) {
-		workers = len(p.seq.elements)
+	if p == nil || p.seq == nil {
+		return nil
 	}
-
-	jobs := make(chan int, len(p.seq.elements))
-
-	for w := 0; w < workers; w++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for idx := range jobs {
-				result[idx] = f(p.seq.elements[idx])
-			}
-		}()
+	if p.seq.err != nil {
+		return p.seq
 	}
-
-	for i := range p.seq.elements {
-		jobs <- i
-	}
-	close(jobs)
-
-	wg.Wait()
-	return From(result)
+	return From(runParallel(p.seq.elements, p.workers, f))
 }
 
-// Slice returns the result as a slice
-func (p *ParallelSeq[T]) Slice() []T {
-	return p.seq.elements
-}
-
-// ParallelMapTo transforms elements concurrently with type change
+// ParallelMapTo transforms every element concurrently into another type.
+//
+//	urls := ParallelMapTo(From(ids).Parallel(16), makeURL).Slice()
 func ParallelMapTo[T any, R any](p *ParallelSeq[T], f func(T) R) *Seq[R] {
-	result := make([]R, len(p.seq.elements))
-	var wg sync.WaitGroup
+	if p == nil || p.seq == nil {
+		return nil
+	}
+	if p.seq.err != nil {
+		return &Seq[R]{err: p.seq.err}
+	}
+	return From(runParallel(p.seq.elements, p.workers, f))
+}
 
-	workers := p.opts.Workers
-	if workers > len(p.seq.elements) {
-		workers = len(p.seq.elements)
+func runParallel[T any, R any](items []T, workers int, f func(T) R) []R {
+	out := make([]R, len(items))
+	if len(items) == 0 {
+		return out
+	}
+	if workers > len(items) {
+		workers = len(items)
+	}
+	if workers < 1 {
+		workers = 1
 	}
 
-	jobs := make(chan int, len(p.seq.elements))
+	var (
+		wg       sync.WaitGroup
+		mu       sync.Mutex
+		panicked bool
+		panicVal any
+	)
 
+	jobs := make(chan int)
+	wg.Add(workers)
 	for w := 0; w < workers; w++ {
-		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for idx := range jobs {
-				result[idx] = f(p.seq.elements[idx])
+			for i := range jobs {
+				func() {
+					finished := false
+					defer func() {
+						r := recover()
+						if finished {
+							return
+						}
+						mu.Lock()
+						if !panicked {
+							panicked, panicVal = true, r
+						}
+						mu.Unlock()
+					}()
+					out[i] = f(items[i])
+					finished = true
+				}()
 			}
 		}()
 	}
 
-	for i := range p.seq.elements {
+	for i := 0; i < len(items); i++ {
 		jobs <- i
 	}
 	close(jobs)
-
 	wg.Wait()
-	return From(result)
+
+	if panicked {
+		panic(panicVal)
+	}
+	return out
 }

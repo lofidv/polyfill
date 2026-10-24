@@ -1,13 +1,15 @@
 package polyfill
 
-// Some returns true if any element satisfies the predicate (like JS array.some)
-//
-// Example:
+// Some reports whether at least one element satisfies predicate.
+// It returns false on an empty sequence or a failed chain.
 //
 //	From([]int{1, 2, 3}).Some(func(n int) bool { return n > 2 }) // true
-func (s *Seq[T]) Some(f func(T) bool) bool {
+func (s *Seq[T]) Some(predicate func(T) bool) bool {
+	if s == nil || s.err != nil {
+		return false
+	}
 	for _, v := range s.elements {
-		if f(v) {
+		if predicate(v) {
 			return true
 		}
 	}

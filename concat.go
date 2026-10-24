@@ -2,74 +2,66 @@ package polyfill
 
 import "slices"
 
-// Concat concatenates multiple sequences into one (like JS array.concat)
+// Concat returns a new sequence with the given slices appended.
 //
-// Example:
-//
-//	From([]int{1, 2}).Concat([]int{3, 4}).Slice() // [1, 2, 3, 4]
+//	From([]int{1, 2}).Concat([]int{3, 4}).Slice() // [1 2 3 4]
 func (s *Seq[T]) Concat(others ...[]T) *Seq[T] {
-	if s.err != nil {
+	if s == nil || s.err != nil {
 		return s
 	}
-
-	result := slices.Clone(s.elements)
+	total := len(s.elements)
+	for _, other := range others {
+		total += len(other)
+	}
+	result := make([]T, 0, total)
+	result = append(result, s.elements...)
 	for _, other := range others {
 		result = append(result, other...)
 	}
 	return From(result)
 }
 
-// Append appends elements to the sequence (returns new sequence, immutable)
+// Append returns a new sequence with the items appended. It never modifies the
+// receiver. Use Push when you want the mutating version.
 //
-// Example:
-//
-//	From([]int{1, 2}).Append(3, 4).Slice() // [1, 2, 3, 4]
+//	From([]int{1, 2}).Append(3, 4).Slice() // [1 2 3 4]
 func (s *Seq[T]) Append(items ...T) *Seq[T] {
+	if s == nil {
+		return From(slices.Clone(items))
+	}
 	if s.err != nil {
 		return s
 	}
-
-	result := slices.Clone(s.elements)
+	result := make([]T, 0, len(s.elements)+len(items))
+	result = append(result, s.elements...)
 	result = append(result, items...)
 	return From(result)
 }
 
-// Prepend adds elements to the beginning (returns new sequence, immutable)
+// Prepend returns a new sequence with the items inserted at the beginning.
 //
-// Example:
-//
-//	From([]int{3, 4}).Prepend(1, 2).Slice() // [1, 2, 3, 4]
+//	From([]int{3, 4}).Prepend(1, 2).Slice() // [1 2 3 4]
 func (s *Seq[T]) Prepend(items ...T) *Seq[T] {
+	if s == nil {
+		return From(slices.Clone(items))
+	}
 	if s.err != nil {
 		return s
 	}
-
 	result := make([]T, 0, len(items)+len(s.elements))
 	result = append(result, items...)
 	result = append(result, s.elements...)
 	return From(result)
 }
 
-// ContainsFunc checks if the sequence contains a value matching the predicate
-//
-// Example:
-//
-//	From([]int{1, 2, 3}).ContainsFunc(func(n int) bool { return n == 2 }) // true
-func (s *Seq[T]) ContainsFunc(predicate func(T) bool) bool {
-	for _, v := range s.elements {
-		if predicate(v) {
-			return true
-		}
-	}
-	return false
-}
-
-// EqualFunc checks if two sequences are equal using a comparison function
-//
-// Example:
+// EqualFunc reports whether both slices have the same length and every pair of
+// elements is equal according to eq.
 //
 //	From([]int{1, 2}).EqualFunc([]int{1, 2}, func(a, b int) bool { return a == b }) // true
 func (s *Seq[T]) EqualFunc(other []T, eq func(T, T) bool) bool {
+	if s == nil || s.err != nil {
+		return false
+	}
 	if len(s.elements) != len(other) {
 		return false
 	}
@@ -81,11 +73,13 @@ func (s *Seq[T]) EqualFunc(other []T, eq func(T, T) bool) bool {
 	return true
 }
 
-// Clone creates a shallow copy of the sequence
-//
-// Example:
-//
-//	copy := From([]int{1, 2, 3}).Clone()
+// Clone returns a sequence with its own copy of the backing array.
 func (s *Seq[T]) Clone() *Seq[T] {
+	if s == nil {
+		return &Seq[T]{}
+	}
+	if s.err != nil {
+		return s
+	}
 	return From(slices.Clone(s.elements))
 }
